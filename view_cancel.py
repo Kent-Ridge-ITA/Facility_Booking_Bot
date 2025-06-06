@@ -9,11 +9,32 @@ def cancel_command(message):
     user = get_user_info(message.from_user.id)
     if not user:
         return
+    
+    # Get current time for filtering past bookings
+    from config import TZ
+    current_time = dt.now(TZ)
+    
     is_admin = (user["role"].strip().lower() == "admin")
-    bookings = get_user_bookings(user["user_id"], is_admin=is_admin)
+    if is_admin:
+        # Admin can cancel all future bookings
+        admin_bookings_data = supabase.table("bookings").select("*") \
+            .neq("status", "cancelled") \
+            .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .execute()
+        bookings = admin_bookings_data.data if admin_bookings_data.data else []
+    else:
+        # Regular user can cancel only their future bookings
+        user_bookings_data = supabase.table("bookings").select("*") \
+            .eq("user_id", user["user_id"]) \
+            .neq("status", "cancelled") \
+            .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .execute()
+        bookings = user_bookings_data.data if user_bookings_data.data else []
+    
     if not bookings:
-        bot.send_message(user["user_id"], "You have no active bookings to cancel. Press /start to restart.")
+        bot.send_message(user["user_id"], "You have no future bookings to cancel. Press /start to restart.")
         return
+    
     venues = get_all_venues()
     users = get_all_users()
     venue_dict = {str(v["venue_id"]): v["name"] for v in venues}
@@ -61,10 +82,19 @@ def view_command(message):
     user = get_user_info(message.from_user.id)
     if not user:
         return
+    
+    # Get current time for filtering past bookings
+    from config import TZ
+    current_time = dt.now(TZ)
+    
     user_role = user["role"].strip().lower()
     if user_role == "jcrc":
         venue_ids = get_venue_ids_for(["Dining Hall", "Reading Room", "MPSH"])
-        data = supabase.table("bookings").select("*").in_("venue_id", venue_ids).eq("status", "confirmed").execute()
+        data = supabase.table("bookings").select("*") \
+            .in_("venue_id", venue_ids) \
+            .eq("status", "confirmed") \
+            .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .execute()
         bookings = data.data if data.data else []
     elif user_role == "block head":
         # Block Head can view their block's lounge bookings + their own bookings
@@ -72,14 +102,20 @@ def view_command(message):
         lounge_name = f"{user_block} Lounge"
         lounge_venue_ids = get_venue_ids_for([lounge_name])
         
-        # Get confirmed bookings for their block's lounge
+        # Get confirmed bookings for their block's lounge (future only)
         lounge_bookings = supabase.table("bookings").select("*") \
             .in_("venue_id", lounge_venue_ids) \
             .eq("status", "confirmed") \
+            .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
             .execute()
         
-        # Get all their personal bookings
-        personal_bookings = get_user_bookings(user["user_id"], is_admin=False)
+        # Get all their personal bookings (future only)
+        personal_bookings_data = supabase.table("bookings").select("*") \
+            .eq("user_id", user["user_id"]) \
+            .neq("status", "cancelled") \
+            .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .execute()
+        personal_bookings = personal_bookings_data.data if personal_bookings_data.data else []
         
         # Combine and deduplicate
         all_bookings = (lounge_bookings.data if lounge_bookings.data else []) + personal_bookings
@@ -91,10 +127,26 @@ def view_command(message):
                 booking_ids.add(b["booking_id"])
     else:
         is_admin = (user["role"].strip().lower() == "admin")
-        bookings = get_user_bookings(user["user_id"], is_admin=is_admin)
+        if is_admin:
+            # Admin sees all future bookings
+            admin_bookings_data = supabase.table("bookings").select("*") \
+                .neq("status", "cancelled") \
+                .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+                .execute()
+            bookings = admin_bookings_data.data if admin_bookings_data.data else []
+        else:
+            # Regular user sees only their future bookings
+            user_bookings_data = supabase.table("bookings").select("*") \
+                .eq("user_id", user["user_id"]) \
+                .neq("status", "cancelled") \
+                .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+                .execute()
+            bookings = user_bookings_data.data if user_bookings_data.data else []
+    
     if not bookings:
-        bot.send_message(user["user_id"], "No active bookings found.")
+        bot.send_message(user["user_id"], "No future bookings found.")
         return
+    
     venues = get_all_venues()
     users = get_all_users()
     venue_dict = {str(v["venue_id"]): v["name"] for v in venues}
@@ -120,4 +172,3 @@ def view_command(message):
         )
         response_lines.append(line)
     bot.send_message(user["user_id"], "\n".join(response_lines))
-
