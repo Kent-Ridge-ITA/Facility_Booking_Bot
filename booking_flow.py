@@ -64,6 +64,7 @@ def handle_venue_selection(message):
             b_end = (b_start + dur).strftime("%H:%M")
             b_start_str = b_start.strftime("%H:%M")
             msg += f"Date: {b_date}, {b_start_str} - {b_end}\n"
+        msg += "\nPress /start to restart."
         bot.send_message(user_id, msg)
     else:
         bot.send_message(user_id, f"No confirmed bookings for {chosen_venue['name']} in the next 7 days. Press /start to restart.")

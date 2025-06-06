@@ -73,16 +73,17 @@ def notify_jcrc_of_new_request(booking):
 
 def notify_block_head_of_new_request(booking, venue):
     # Extract block from venue name (e.g., "A Blk Lounge" -> "A Blk")
-    venue_block = venue["name"].strip().replace(" Lounge", " Blk")
+    venue_block = venue["name"].strip().replace(" Lounge", "")
     
-    # Find Block Head for this specific block
+    # Find Block Head for this specific block - make sure role comparison is case-insensitive
     block_head_result = supabase.table("users").select("*") \
-        .eq("role", "Block Head") \
+        .ilike("role", "Block Head") \
         .eq("block", venue_block) \
         .execute()
     block_heads = block_head_result.data if block_head_result.data else []
     
     if not block_heads:
+        print(f"No Block Head found for {venue_block}")
         return
     
     booking_id = booking["booking_id"]
@@ -113,5 +114,6 @@ def notify_block_head_of_new_request(booking, venue):
         block_head_user_id = block_head["user_id"]
         try:
             bot.send_message(block_head_user_id, detail_msg)
+            print(f"Notification sent to Block Head {block_head_user_id} for {venue_block}")
         except Exception as e:
             print(f"Failed to notify Block Head {block_head_user_id}: {e}")

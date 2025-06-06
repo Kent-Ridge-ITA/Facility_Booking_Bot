@@ -45,23 +45,16 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
         .eq("reason", reason) \
         .execute()
     new_booking_data = result.data[0] if result.data else None
+    
     if new_booking_data and status == "confirmed":
         event_id = add_event_to_calendar(new_booking_data, venue)
         supabase.table("bookings").update({"calendar_event_id": event_id}).eq("booking_id", new_booking_data["booking_id"]).execute()
 
-    if status == "pending approval":
+    # Send notifications for pending approvals
+    if status == "pending approval" and new_booking_data:
         if venue_name in ["reading room", "dining hall"]:
-            result = supabase.table("bookings").select("*") \
-                .eq("user_id", user_id) \
-                .eq("venue_id", venue["venue_id"]) \
-                .eq("booking_date", booking_start_str) \
-                .eq("status", "pending approval") \
-                .eq("reason", reason) \
-                .execute()
-            new_booking_data = result.data[0] if result.data else None
-            if new_booking_data:
-                from notifications import notify_jcrc_of_new_request
-                notify_jcrc_of_new_request(new_booking_data)
+            from notifications import notify_jcrc_of_new_request
+            notify_jcrc_of_new_request(new_booking_data)
         elif "blk lounge" in venue_name:
             from notifications import notify_block_head_of_new_request
             notify_block_head_of_new_request(new_booking_data, venue)
