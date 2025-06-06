@@ -830,3 +830,24 @@ requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.telegram.org', po
 2025-06-06 10:14:42,993 - config - CRITICAL - Bot is starting polling...
 2025-06-06 10:17:17,492 - config - CRITICAL - Bot is starting polling...
 2025-06-06 10:21:39,031 - config - CRITICAL - Bot is starting polling...
+2025-06-06 10:53:00,384 - config - CRITICAL - Bot is starting polling...
+2025-06-06 10:56:58,319 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/main.py", line 14, in <module>
+    bot.polling(none_stop=True)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/booking_flow.py", line 129, in handle_start_time
+    if proposed_dt <= current_time:
+TypeError: can't compare offset-naive and offset-aware datetimes
+2025-06-06 11:01:21,571 - config - CRITICAL - Bot is starting polling...
+2025-06-06 11:03:01,198 - config - CRITICAL - Bot is starting polling...
+2025-06-06 11:05:56,289 - config - CRITICAL - Bot is starting polling...

@@ -93,6 +93,14 @@ def callback_booking_date(call):
     flow_data = user_booking_flow[user_id]
     try:
         booking_date = dt.strptime(date_str, "%Y-%m-%d")
+        # Safety check: prevent booking dates in the past
+        today = dt.now(TZ).date()
+        if booking_date.date() < today:
+            bot.answer_callback_query(call.id, "Cannot book dates in the past.")
+            bot.edit_message_text("Invalid date selected. Cannot book past dates. Press /start to restart.", 
+                                call.message.chat.id, call.message.message_id)
+            user_booking_flow.pop(user_id, None)
+            return
         flow_data["booking_date"] = booking_date
         flow_data["step"] = 3
         bot.edit_message_text(f"Date selected: {date_str}", call.message.chat.id, call.message.message_id)
@@ -115,6 +123,15 @@ def handle_start_time(message):
             bot.register_next_step_handler(message, handle_start_time)
             return
         proposed_dt = dt.combine(flow_data["booking_date"].date(), proposed_start)
+        proposed_dt = TZ.localize(proposed_dt)
+
+        # Safety check: prevent booking times in the past
+        current_time = dt.now(TZ)
+        if proposed_dt <= current_time:
+            bot.send_message(user_id, "Cannot book times in the past. Please select a future time. Press /start to restart.")
+            user_booking_flow.pop(user_id, None)
+            return
+        
         if check_start_conflict(flow_data["venue"], proposed_dt):
             bot.send_message(user_id, "The specified start time conflicts with an existing confirmed booking. Exiting booking process.")
             user_booking_flow.pop(user_id, None)
@@ -218,7 +235,8 @@ def handle_reason(message):
     flow_data["reason"] = reason
     venue = flow_data["venue"]
     booking_start = dt.combine(flow_data["booking_date"].date(), flow_data["start_time"])
-    create_booking(
+    booking_start = TZ.localize(booking_start)
+    booking_created = create_booking(
         user_id=user_id,
         venue=venue,
         booking_start=booking_start,
@@ -226,6 +244,12 @@ def handle_reason(message):
         user_role=flow_data["user"]["role"],
         reason=reason
     )
+
+    if not booking_created:
+        bot.send_message(user_id, "Failed to create booking. The selected time is in the past. Press /start to restart.")
+        user_booking_flow.pop(user_id, None)
+        return
+    
     display_date = booking_start.strftime("%Y-%m-%d")
     display_start = flow_data["start_time"].strftime("%H:%M")
     display_end = (booking_start + parse_duration(flow_data["duration"])).strftime("%H:%M")

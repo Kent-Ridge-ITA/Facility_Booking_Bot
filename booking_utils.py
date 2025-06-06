@@ -4,6 +4,13 @@ from calendar_helpers import add_event_to_calendar, remove_event_from_calendar
 from db_helpers import parse_duration
 
 def create_booking(user_id, venue, booking_start, duration_text, user_role, reason):
+    # Safety check: prevent creating bookings in the past
+    from config import TZ
+    current_time = dt.now(TZ)
+    if booking_start <= current_time:
+        print(f"Attempted to create booking in the past: {booking_start} <= {current_time}")
+        return False
+    
     venue_name = venue["name"].strip().lower()
     if "blk lounge" in venue_name:
         # Extract block from venue name (e.g., "A Blk Lounge" -> "A Blk")
@@ -27,7 +34,8 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
     else:
         status = "pending approval"
     
-    booking_start_str = booking_start.strftime("%Y-%m-%d %H:%M:%S")
+    booking_start_naive = booking_start.replace(tzinfo=None) if booking_start.tzinfo else booking_start
+    booking_start_str = booking_start_naive.strftime("%Y-%m-%d %H:%M:%S")
     data = {
         "user_id": user_id,
         "venue_id": venue["venue_id"],
@@ -58,6 +66,8 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
         elif "blk lounge" in venue_name:
             from notifications import notify_block_head_of_new_request
             notify_block_head_of_new_request(new_booking_data, venue)
+    
+    return True
 
 def check_conflict(venue, new_booking_start, duration_text, user_id):
     new_duration = parse_duration(duration_text)
