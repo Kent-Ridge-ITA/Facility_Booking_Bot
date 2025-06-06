@@ -16,20 +16,20 @@ def notify_approval(booking):
     start_str = booking_start.strftime("%Y-%m-%d %H:%M")
     end_str = end_dt.strftime("%Y-%m-%d %H:%M")
     detail_message = (
-        f"Booking ID: {booking_id}\n"
-        f"Venue: {venue_name}\n"
-        f"Name: {user_name}\n"
-        f"Start: {start_str}\n"
-        f"End: {end_str}\n"
-        f"Status: {booking['status']}\n"
-        f"Reason: {booking.get('reason','')}\n"
+        f"📋 Booking ID: {booking_id}\n"
+        f"🏢 Venue: {venue_name}\n"
+        f"👤 Name: {user_name}\n"
+        f"📅 Start: {start_str}\n"
+        f"⏰ End: {end_str}\n"
+        f"✅ Status: {booking['status']}\n"
+        f"📝 Reason: {booking.get('reason','')}\n"
         "----------------------"
     )
     try:
-        bot.send_message(user_id, f"Your booking has been approved!\n\n{detail_message}")
+        bot.send_message(user_id, f"🎉 Your booking has been approved!\n\n{detail_message}")
     except Exception as e:
         print(f"Failed to message user {user_id}: {e}")
-    broadcast_text = f"Booking Approved!\n\n{detail_message}"
+    broadcast_text = f"📢 Booking Approved!\n\n{detail_message}"
     for chat_id in GROUP_CHAT_IDS:
         try:
             bot.send_message(chat_id, broadcast_text)
@@ -58,14 +58,14 @@ def notify_jcrc_of_new_request(booking):
     start_str = booking_start.strftime("%Y-%m-%d %H:%M")
     end_str = end_dt.strftime("%Y-%m-%d %H:%M")
     detail_msg = (
-        f"New booking request (Pending Approval)!\n"
-        f"Booking ID: {booking_id}\n"
-        f"Venue: {venue_name}\n"
-        f"Name: {user_name}\n"
-        f"Start: {start_str}\n"
-        f"End: {end_str}\n"
-        f"Status: {booking['status']}\n"
-        f"Reason: {booking.get('reason', '')}\n"
+        f"🔔 New booking request (Pending Approval)!\n"
+        f"📋 Booking ID: {booking_id}\n"
+        f"🏢 Venue: {venue_name}\n"
+        f"👤 Name: {user_name}\n"
+        f"📅 Start: {start_str}\n"
+        f"⏰ End: {end_str}\n"
+        f"⏳ Status: {booking['status']}\n"
+        f"📝 Reason: {booking.get('reason', '')}\n"
         "----------------------"
     )
     for jcrc_user in jcrc_users:
@@ -104,14 +104,14 @@ def notify_block_head_of_new_request(booking, venue):
     end_str = end_dt.strftime("%Y-%m-%d %H:%M")
     
     detail_msg = (
-        f"New {venue_block} booking request (Pending Approval)!\n"
-        f"Booking ID: {booking_id}\n"
-        f"Venue: {venue_name}\n"
-        f"Name: {user_name}\n"
-        f"Start: {start_str}\n"
-        f"End: {end_str}\n"
-        f"Status: {booking['status']}\n"
-        f"Reason: {booking.get('reason', '')}\n"
+        f"🔔 New {venue_block} booking request (Pending Approval)!\n"
+        f"📋 Booking ID: {booking_id}\n"
+        f"🏢 Venue: {venue_name}\n"
+        f"👤 Name: {user_name}\n"
+        f"📅 Start: {start_str}\n"
+        f"⏰ End: {end_str}\n"
+        f"⏳ Status: {booking['status']}\n"
+        f"📝 Reason: {booking.get('reason', '')}\n"
         "----------------------"
     )
     

@@ -58,18 +58,18 @@ def cancel_command(message):
             booking_type_display = f" [{booking_type.upper()}]"
         
         line = (
-            f"Booking ID: {b['booking_id']}\n"
-            f"Venue: {venue_name}{booking_type_display}\n"
-            f"Name: {user_name}\n"
-            f"Start: {start_time}\n"
-            f"End: {end_time}\n"
-            f"Status: {b['status']}\n"
-            f"Reason: {b.get('reason','')}\n"
+            f"📋 Booking ID: {b['booking_id']}\n"
+            f"🏢 Venue: {venue_name}{booking_type_display}\n"
+            f"👤 Name: {user_name}\n"
+            f"📅 Start: {start_time}\n"
+            f"⏰ End: {end_time}\n"
+            f"📊 Status: {b['status']}\n"
+            f"📝 Reason: {b.get('reason','')}\n"
             "----------------------"
         )
         response_lines.append(line)
     final_msg = "\n".join(response_lines)
-    final_msg += "\nPlease enter the Booking ID to cancel:"
+    final_msg += "\n❓ Please enter the Booking ID to cancel:"
     bot.send_message(user["user_id"], final_msg)
     bot.register_next_step_handler(message, process_cancel)
 
@@ -80,9 +80,9 @@ def process_cancel(message):
         user = get_user_info(user_id)
         is_admin = (user and user["role"].strip().lower() == "admin")
         if cancel_booking(booking_id, user_id, is_admin=is_admin):
-            bot.send_message(message.from_user.id, f"Booking {booking_id} cancelled successfully. Press /start to restart.")
+            bot.send_message(message.from_user.id, f"✅ Booking {booking_id} cancelled successfully. Press /start to restart.")
         else:
-            bot.send_message(message.from_user.id, "Unable to cancel booking. Please check the Booking ID. Press /start to restart.")
+            bot.send_message(message.from_user.id, "❌ Unable to cancel booking. Please check the Booking ID. Press /start to restart.")
     except ValueError:
         bot.send_message(message.from_user.id, "Invalid Booking ID. Press /start to restart.")
 
@@ -182,7 +182,7 @@ def view_command(message):
             bookings = user_bookings_data.data if user_bookings_data.data else []
     
     if not bookings:
-        bot.send_message(user["user_id"], "No future bookings found.")
+        bot.send_message(user["user_id"], "📭 No future bookings found.")
         return
     
     venues = get_all_venues()
@@ -206,13 +206,13 @@ def view_command(message):
             booking_type_display = f" [{booking_type.upper()}]"
         
         line = (
-            f"Booking ID: {b['booking_id']}\n"
-            f"Venue: {venue_name}{booking_type_display}\n"
-            f"Name: {user_name}\n"
-            f"Start: {start_time}\n"
-            f"End: {end_time}\n"
-            f"Status: {b['status']}\n"
-            f"Reason: {b.get('reason','')}\n"
+            f"📋 Booking ID: {b['booking_id']}\n"
+            f"🏢 Venue: {venue_name}{booking_type_display}\n"
+            f"👤 Name: {user_name}\n"
+            f"📅 Start: {start_time}\n"
+            f"⏰ End: {end_time}\n"
+            f"📊 Status: {b['status']}\n"
+            f"📝 Reason: {b.get('reason','')}\n"
             "----------------------"
         )
         response_lines.append(line)

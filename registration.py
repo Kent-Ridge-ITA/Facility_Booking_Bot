@@ -8,19 +8,19 @@ def start(message):
     if user is None:
         bot.send_message(
             message.from_user.id,
-            "Welcome! It looks like you're new here. Please tell us your name! (Use your real name.)"
+            "👋 Welcome! It looks like you're new here. Please tell us your name! (Use your real name.)"
         )
         bot.register_next_step_handler(message, register_new_user)
     else:
         if user['role'] == "Resident":
             bot.send_message(
                 message.from_user.id,
-                f"Welcome back {user.get('name', '')}! You are registered as: {user['role']} from {user.get('block', 'Unknown Block')}"
+                f"👋 Welcome back {user.get('name', '')}! You are registered as: {user['role']} from {user.get('block', 'Unknown Block')}"
             )
         else:
             bot.send_message(
                 message.from_user.id,
-                f"Welcome back {user.get('name', '')}! You are registered as: {user['role']} of {user['cca']} from {user.get('block', 'Unknown Block')}"
+                f"👋 Welcome back {user.get('name', '')}! You are registered as: {user['role']} of {user['cca']} from {user.get('block', 'Unknown Block')}"
             )
         send_main_menu(message.from_user.id)
 
@@ -34,7 +34,7 @@ def register_new_user(message):
         markup.add(btn)
     bot.send_message(
         user_id,
-        f"Hi {name}! Please select your block (choices are permanent):",
+        f"👋 Hi {name}! Please select your block (choices are permanent):",
         reply_markup=markup
     )
 
@@ -45,7 +45,7 @@ def callback_set_block(call):
     block_name = " ".join([block[0], "Blk"]) if len(block) == 4 else block.replace('Blk', ' Blk')
     name = user_booking_flow.get(user_id, {}).get("name", None)
     if not name:
-        bot.send_message(user_id, "Session expired. Please /start again.")
+        bot.send_message(user_id, "⏰ Session expired. Please /start again.")
         return
     new_user = {
         "user_id": user_id,
@@ -56,7 +56,7 @@ def callback_set_block(call):
     }
     supabase.table("users").insert(new_user).execute()
     bot.edit_message_text(
-        f"Thanks {name}! You are now registered as a Resident in {block_name}.",
+        f"✅ Thanks {name}! You are now registered as a Resident in {block_name}.",
         call.message.chat.id,
         call.message.message_id
     )
@@ -78,9 +78,9 @@ def send_main_menu(chat_id):
     if user and user["role"].strip().lower() in ["jcrc", "block head"]:
         buttons.append(types.KeyboardButton("/approve"))
     markup.add(*buttons)
-    bot.send_message(chat_id, "Choose an option:", reply_markup=markup)
+    bot.send_message(chat_id, "🎯 Choose an option:", reply_markup=markup)
 
 @bot.message_handler(commands=['getid'])
 def getid_command(message):
     user_id = message.from_user.id
-    bot.send_message(user_id, f"Your User ID is: {user_id}. Press /start to restart the process.")
+    bot.send_message(user_id, f"🆔 Your User ID is: {user_id}. Press /start to restart the process.")
