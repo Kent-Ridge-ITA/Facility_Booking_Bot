@@ -228,12 +228,38 @@ def handle_reason(message):
     display_date = booking_start.strftime("%Y-%m-%d")
     display_start = flow_data["start_time"].strftime("%H:%M")
     display_end = (booking_start + parse_duration(flow_data["duration"])).strftime("%H:%M")
-    msg = (f"Booking for {venue['name']} on {display_date} from {display_start} to {display_end} has been placed.\n")
-    if (flow_data["user"]["role"].strip().lower() != "jcrc" and 
-        venue["name"].strip().lower() in ["reading room", "dining hall"]):
-        msg += "It is pending approval by JCRC."
+    
+    venue_name = venue["name"].strip().lower()
+    user_role = flow_data["user"]["role"].strip().lower()
+    user_block = flow_data["user"].get("block", "").strip().lower()
+    
+    msg = f"Booking for {venue['name']} on {display_date} from {display_start} to {display_end} has been placed.\n"
+    
+    # Determine if booking needs approval
+    needs_approval = False
+    
+    if venue_name in ["reading room", "dining hall"]:
+        needs_approval = (user_role != "jcrc")
+    elif "blk lounge" in venue_name:
+        # Extract block from venue name for comparison
+        venue_block = venue_name.replace(" lounge", "")
+        needs_approval = not (user_role == "block head" and user_block == venue_block)
+    elif venue_name in ["mpsh", "band room"]:
+        needs_approval = False
+    else:
+        needs_approval = True
+    
+    if needs_approval:
+        if venue_name in ["reading room", "dining hall"]:
+            msg += "It is pending approval by JCRC."
+        elif "blk lounge" in venue_name:
+            venue_block_display = venue_name.replace(" lounge", "").title()
+            msg += f"It is pending approval by {venue_block_display} Block Head."
+        else:
+            msg += "It is pending approval."
     else:
         msg += "It is confirmed."
+    
     msg += "\nPress /start to restart the process."
     bot.send_message(user_id, msg)
     user_booking_flow.pop(user_id, None)

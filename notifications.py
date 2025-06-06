@@ -70,3 +70,48 @@ def notify_jcrc_of_new_request(booking):
             bot.send_message(jcrc_user_id, detail_msg)
         except Exception as e:
             print(f"Failed to notify JCRC user {jcrc_user_id}: {e}")
+
+def notify_block_head_of_new_request(booking, venue):
+    # Extract block from venue name (e.g., "A Blk Lounge" -> "A Blk")
+    venue_block = venue["name"].strip().replace(" Lounge", " Blk")
+    
+    # Find Block Head for this specific block
+    block_head_result = supabase.table("users").select("*") \
+        .eq("role", "Block Head") \
+        .eq("block", venue_block) \
+        .execute()
+    block_heads = block_head_result.data if block_head_result.data else []
+    
+    if not block_heads:
+        return
+    
+    booking_id = booking["booking_id"]
+    user_id = booking["user_id"]
+    user_info = get_user_info(user_id)
+    user_name = user_info.get("name", "Unknown User") if user_info else "Unknown User"
+    venue_name = venue.get("name", "Unknown Venue")
+    
+    booking_start = dt.fromisoformat(booking["booking_date"])
+    dur = parse_duration(booking["duration"])
+    end_dt = booking_start + dur
+    start_str = booking_start.strftime("%Y-%m-%d %H:%M")
+    end_str = end_dt.strftime("%Y-%m-%d %H:%M")
+    
+    detail_msg = (
+        f"New {venue_block} booking request (Pending Approval)!\n"
+        f"Booking ID: {booking_id}\n"
+        f"Venue: {venue_name}\n"
+        f"Name: {user_name}\n"
+        f"Start: {start_str}\n"
+        f"End: {end_str}\n"
+        f"Status: {booking['status']}\n"
+        f"Reason: {booking.get('reason', '')}\n"
+        "----------------------"
+    )
+    
+    for block_head in block_heads:
+        block_head_user_id = block_head["user_id"]
+        try:
+            bot.send_message(block_head_user_id, detail_msg)
+        except Exception as e:
+            print(f"Failed to notify Block Head {block_head_user_id}: {e}")

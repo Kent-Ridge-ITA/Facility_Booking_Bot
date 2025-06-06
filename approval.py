@@ -8,22 +8,37 @@ def approve_command(message):
     user = get_user_info(message.from_user.id)
     if not user:
         return
-    if user["role"].strip().lower() != "jcrc":
+    
+    user_role = user["role"].strip().lower()
+    
+    if user_role == "jcrc":
+        # JCRC can approve Reading Room and Dining Hall
+        venue_ids = get_venue_ids_for(["Reading Room", "Dining Hall"])
+    elif user_role == "block head":
+        # Block Head can approve their own block's lounge
+        user_block = user.get("block", "").strip()
+        lounge_name = f"{user_block} Lounge"
+        venue_ids = get_venue_ids_for([lounge_name])
+    else:
         bot.send_message(user["user_id"], "You do not have permission to approve bookings. Press /start to restart.")
         return
-    venue_ids = get_venue_ids_for(["Reading Room", "Dining Hall"])
+    
     response = supabase.table("bookings").select("*") \
         .eq("status", "pending approval") \
         .in_("venue_id", venue_ids) \
         .execute()
     pending = response.data if response.data else []
+    
     if not pending:
-        bot.send_message(user["user_id"], "No pending bookings for approval. Press /start to restart.")
+        approval_type = "Reading Room/Dining Hall" if user_role == "jcrc" else f"{user.get('block', 'your block')} Lounge"
+        bot.send_message(user["user_id"], f"No pending {approval_type} bookings for approval. Press /start to restart.")
         return
+    
     venues = get_all_venues()
     users = get_all_users()
     venue_dict = {str(v["venue_id"]): v["name"] for v in venues}
     users_dict = {str(u["user_id"]): u["name"] for u in users}
+    
     msg = "Pending bookings for approval:\n"
     for b in pending:
         booking_start = dt.fromisoformat(b["booking_date"])
@@ -44,6 +59,7 @@ def approve_command(message):
             "----------------------"
         )
         msg += line + "\n"
+    
     msg += "\nPlease enter the Booking ID to approve:"
     bot.send_message(user["user_id"], msg)
     bot.register_next_step_handler(message, process_approval)

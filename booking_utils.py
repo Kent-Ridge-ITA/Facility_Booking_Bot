@@ -5,7 +5,22 @@ from db_helpers import parse_duration
 
 def create_booking(user_id, venue, booking_start, duration_text, user_role, reason):
     venue_name = venue["name"].strip().lower()
-    if venue_name in ["reading room", "dining hall"]:
+    if "blk lounge" in venue_name:
+        # Extract block from venue name (e.g., "A Blk Lounge" -> "A Blk")
+        venue_block = venue_name.replace(" lounge", "")
+        
+        # Get user info to check their block and role
+        from db_helpers import get_user_info
+        user_info = get_user_info(user_id)
+        user_block = user_info.get("block", "").strip().lower() if user_info else ""
+        
+        # Block Head can directly book their own block's lounge
+        if (user_role.strip().lower() == "block head" and 
+            user_block == venue_block):
+            status = "confirmed"
+        else:
+            status = "pending approval"
+    elif venue_name in ["reading room", "dining hall"]:
         status = "confirmed" if user_role.strip().lower() == "jcrc" else "pending approval"
     elif venue_name in ["mpsh", "band room"]:
         status = "confirmed"
@@ -33,18 +48,23 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
     if new_booking_data and status == "confirmed":
         event_id = add_event_to_calendar(new_booking_data, venue)
         supabase.table("bookings").update({"calendar_event_id": event_id}).eq("booking_id", new_booking_data["booking_id"]).execute()
-    if venue_name in ["reading room", "dining hall"] and status == "pending approval":
-        result = supabase.table("bookings").select("*") \
-            .eq("user_id", user_id) \
-            .eq("venue_id", venue["venue_id"]) \
-            .eq("booking_date", booking_start_str) \
-            .eq("status", "pending approval") \
-            .eq("reason", reason) \
-            .execute()
-        new_booking_data = result.data[0] if result.data else None
-        if new_booking_data:
-            from notifications import notify_jcrc_of_new_request
-            notify_jcrc_of_new_request(new_booking_data)
+
+    if status == "pending approval":
+        if venue_name in ["reading room", "dining hall"]:
+            result = supabase.table("bookings").select("*") \
+                .eq("user_id", user_id) \
+                .eq("venue_id", venue["venue_id"]) \
+                .eq("booking_date", booking_start_str) \
+                .eq("status", "pending approval") \
+                .eq("reason", reason) \
+                .execute()
+            new_booking_data = result.data[0] if result.data else None
+            if new_booking_data:
+                from notifications import notify_jcrc_of_new_request
+                notify_jcrc_of_new_request(new_booking_data)
+        elif "blk lounge" in venue_name:
+            from notifications import notify_block_head_of_new_request
+            notify_block_head_of_new_request(new_booking_data, venue)
 
 def check_conflict(venue, new_booking_start, duration_text, user_id):
     new_duration = parse_duration(duration_text)

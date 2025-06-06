@@ -61,10 +61,34 @@ def view_command(message):
     user = get_user_info(message.from_user.id)
     if not user:
         return
-    if user["role"].strip().lower() == "jcrc":
+    user_role = user["role"].strip().lower()
+    if user_role == "jcrc":
         venue_ids = get_venue_ids_for(["Dining Hall", "Reading Room", "MPSH"])
         data = supabase.table("bookings").select("*").in_("venue_id", venue_ids).eq("status", "confirmed").execute()
         bookings = data.data if data.data else []
+    elif user_role == "block head":
+        # Block Head can view their block's lounge bookings + their own bookings
+        user_block = user.get("block", "").strip()
+        lounge_name = f"{user_block} Lounge"
+        lounge_venue_ids = get_venue_ids_for([lounge_name])
+        
+        # Get confirmed bookings for their block's lounge
+        lounge_bookings = supabase.table("bookings").select("*") \
+            .in_("venue_id", lounge_venue_ids) \
+            .eq("status", "confirmed") \
+            .execute()
+        
+        # Get all their personal bookings
+        personal_bookings = get_user_bookings(user["user_id"], is_admin=False)
+        
+        # Combine and deduplicate
+        all_bookings = (lounge_bookings.data if lounge_bookings.data else []) + personal_bookings
+        booking_ids = set()
+        bookings = []
+        for b in all_bookings:
+            if b["booking_id"] not in booking_ids:
+                bookings.append(b)
+                booking_ids.add(b["booking_id"])
     else:
         is_admin = (user["role"].strip().lower() == "admin")
         bookings = get_user_bookings(user["user_id"], is_admin=is_admin)

@@ -75,7 +75,7 @@ def send_main_menu(chat_id):
     if user and user["role"].strip().lower() == "admin":
         buttons.append(types.KeyboardButton("/admin_update"))
         buttons.append(types.KeyboardButton("/restart"))
-    if user and user["role"].strip().lower() == "jcrc":
+    if user and user["role"].strip().lower() in ["jcrc", "block head"]:
         buttons.append(types.KeyboardButton("/approve"))
     markup.add(*buttons)
     bot.send_message(chat_id, "Choose an option:", reply_markup=markup)
