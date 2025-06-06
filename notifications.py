@@ -37,10 +37,14 @@ def notify_approval(booking):
             print(f"Failed to notify group {chat_id}: {e}")
 
 def notify_jcrc_of_new_request(booking):
-    jcrc_result = supabase.table("users").select("*").eq("role", "jcrc").execute()
+    # Use case-insensitive query for JCRC role
+    jcrc_result = supabase.table("users").select("*").ilike("role", "JCRC").execute()
     jcrc_users = jcrc_result.data if jcrc_result.data else []
+    
     if not jcrc_users:
+        print("No JCRC users found in database")
         return
+    
     booking_id = booking["booking_id"]
     user_id = booking["user_id"]
     user_info = get_user_info(user_id)
@@ -68,6 +72,7 @@ def notify_jcrc_of_new_request(booking):
         jcrc_user_id = jcrc_user["user_id"]
         try:
             bot.send_message(jcrc_user_id, detail_msg)
+            print(f"Notification sent to JCRC user {jcrc_user_id}")
         except Exception as e:
             print(f"Failed to notify JCRC user {jcrc_user_id}: {e}")
 

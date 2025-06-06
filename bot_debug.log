@@ -852,3 +852,25 @@ TypeError: can't compare offset-naive and offset-aware datetimes
 2025-06-06 11:03:01,198 - config - CRITICAL - Bot is starting polling...
 2025-06-06 11:05:56,289 - config - CRITICAL - Bot is starting polling...
 2025-06-06 11:43:32,564 - config - CRITICAL - Bot is starting polling...
+2025-06-06 11:58:28,316 - config - CRITICAL - Bot is starting polling...
+2025-06-06 11:59:50,545 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/main.py", line 14, in <module>
+    bot.polling(none_stop=True)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/booking_flow.py", line 135, in handle_start_time
+    if check_start_conflict(flow_data["venue"], proposed_dt):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/booking_utils.py", line 104, in check_start_conflict
+    if confirmed_start <= proposed_start < confirmed_end:
+TypeError: can't compare offset-naive and offset-aware datetimes
+2025-06-06 12:01:17,557 - config - CRITICAL - Bot is starting polling...
+2025-06-06 12:05:11,744 - config - CRITICAL - Bot is starting polling...

@@ -70,8 +70,14 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
     return True
 
 def check_conflict(venue, new_booking_start, duration_text, user_id):
+    from config import TZ
     new_duration = parse_duration(duration_text)
     new_booking_end = new_booking_start + new_duration
+    
+    # Ensure new_booking_start is timezone-aware
+    if new_booking_start.tzinfo is None:
+        new_booking_start = TZ.localize(new_booking_start)
+    
     response = supabase.table("bookings").select("*") \
         .eq("venue_id", venue["venue_id"]) \
         .eq("status", "confirmed") \
@@ -79,16 +85,22 @@ def check_conflict(venue, new_booking_start, duration_text, user_id):
     bookings = response.data if response.data else []
     for b in bookings:
         confirmed_start = dt.fromisoformat(b["booking_date"])
+        # Make confirmed_start timezone-aware for comparison
+        if confirmed_start.tzinfo is None:
+            confirmed_start = TZ.localize(confirmed_start)
+        
         try:
             confirmed_duration = parse_duration(b["duration"])
         except Exception:
             confirmed_duration = timedelta(0)
         confirmed_end = confirmed_start + confirmed_duration
+        
         if new_booking_start < confirmed_end and new_booking_end > confirmed_start:
             return True
     return False
 
 def check_start_conflict(venue, proposed_start):
+    from config import TZ
     response = supabase.table("bookings").select("*") \
         .eq("venue_id", venue["venue_id"]) \
         .eq("status", "confirmed") \
@@ -96,11 +108,20 @@ def check_start_conflict(venue, proposed_start):
     bookings = response.data if response.data else []
     for b in bookings:
         confirmed_start = dt.fromisoformat(b["booking_date"])
+        # Make confirmed_start timezone-aware for comparison
+        if confirmed_start.tzinfo is None:
+            confirmed_start = TZ.localize(confirmed_start)
+        
         try:
             confirmed_duration = parse_duration(b["duration"])
         except Exception:
             confirmed_duration = timedelta(0)
         confirmed_end = confirmed_start + confirmed_duration
+        
+        # Ensure proposed_start is also timezone-aware
+        if proposed_start.tzinfo is None:
+            proposed_start = TZ.localize(proposed_start)
+        
         if confirmed_start <= proposed_start < confirmed_end:
             return True
     return False

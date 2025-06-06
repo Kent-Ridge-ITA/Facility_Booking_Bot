@@ -20,6 +20,7 @@ def cancel_command(message):
         admin_bookings_data = supabase.table("bookings").select("*") \
             .neq("status", "cancelled") \
             .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .order("booking_id", desc=False) \
             .execute()
         bookings = admin_bookings_data.data if admin_bookings_data.data else []
     else:
@@ -28,6 +29,7 @@ def cancel_command(message):
             .eq("user_id", user["user_id"]) \
             .neq("status", "cancelled") \
             .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .order("booking_id", desc=False) \
             .execute()
         bookings = user_bookings_data.data if user_bookings_data.data else []
     
@@ -89,13 +91,36 @@ def view_command(message):
     
     user_role = user["role"].strip().lower()
     if user_role == "jcrc":
+        # JCRC can view Dining Hall, Reading Room, MPSH bookings + their own bookings
         venue_ids = get_venue_ids_for(["Dining Hall", "Reading Room", "MPSH"])
-        data = supabase.table("bookings").select("*") \
+        
+        # Get confirmed bookings for JCRC venues (future only)
+        jcrc_venue_bookings = supabase.table("bookings").select("*") \
             .in_("venue_id", venue_ids) \
             .eq("status", "confirmed") \
             .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .order("booking_id", desc=False) \
             .execute()
-        bookings = data.data if data.data else []
+        
+        # Get all their personal bookings (future only)
+        personal_bookings_data = supabase.table("bookings").select("*") \
+            .eq("user_id", user["user_id"]) \
+            .neq("status", "cancelled") \
+            .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .order("booking_id", desc=False) \
+            .execute()
+        personal_bookings = personal_bookings_data.data if personal_bookings_data.data else []
+        
+        # Combine and sort by booking_id
+        all_bookings = (jcrc_venue_bookings.data if jcrc_venue_bookings.data else []) + personal_bookings
+        booking_ids = set()
+        bookings = []
+        for b in all_bookings:
+            if b["booking_id"] not in booking_ids:
+                bookings.append(b)
+                booking_ids.add(b["booking_id"])
+        # Sort combined bookings by booking_id
+        bookings = sorted(bookings, key=lambda x: x["booking_id"])
     elif user_role == "block head":
         # Block Head can view their block's lounge bookings + their own bookings
         user_block = user.get("block", "").strip()
@@ -107,6 +132,7 @@ def view_command(message):
             .in_("venue_id", lounge_venue_ids) \
             .eq("status", "confirmed") \
             .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .order("booking_id", desc=False) \
             .execute()
         
         # Get all their personal bookings (future only)
@@ -114,10 +140,11 @@ def view_command(message):
             .eq("user_id", user["user_id"]) \
             .neq("status", "cancelled") \
             .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+            .order("booking_id", desc=False) \
             .execute()
         personal_bookings = personal_bookings_data.data if personal_bookings_data.data else []
         
-        # Combine and deduplicate
+        # Combine and sort by booking_id
         all_bookings = (lounge_bookings.data if lounge_bookings.data else []) + personal_bookings
         booking_ids = set()
         bookings = []
@@ -125,6 +152,8 @@ def view_command(message):
             if b["booking_id"] not in booking_ids:
                 bookings.append(b)
                 booking_ids.add(b["booking_id"])
+        # Sort combined bookings by booking_id
+        bookings = sorted(bookings, key=lambda x: x["booking_id"])
     else:
         is_admin = (user["role"].strip().lower() == "admin")
         if is_admin:
@@ -132,6 +161,7 @@ def view_command(message):
             admin_bookings_data = supabase.table("bookings").select("*") \
                 .neq("status", "cancelled") \
                 .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+                .order("booking_id", desc=False) \
                 .execute()
             bookings = admin_bookings_data.data if admin_bookings_data.data else []
         else:
@@ -140,6 +170,7 @@ def view_command(message):
                 .eq("user_id", user["user_id"]) \
                 .neq("status", "cancelled") \
                 .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
+                .order("booking_id", desc=False) \
                 .execute()
             bookings = user_bookings_data.data if user_bookings_data.data else []
     

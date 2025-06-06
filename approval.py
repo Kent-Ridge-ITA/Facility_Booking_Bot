@@ -26,6 +26,7 @@ def approve_command(message):
     response = supabase.table("bookings").select("*") \
         .eq("status", "pending approval") \
         .in_("venue_id", venue_ids) \
+        .order("booking_id", desc=False) \
         .execute()
     pending = response.data if response.data else []
     
