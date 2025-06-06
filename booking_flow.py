@@ -42,9 +42,41 @@ def handle_venue_selection(message):
         bot.send_message(user_id, "Invalid venue selection. Please try /start again.")
         user_booking_flow.pop(user_id, None)
         return
+    
     flow_data["venue"] = chosen_venue
     flow_data["step"] = 2
 
+    # Check if venue is MPSH to ask for booking type
+    if chosen_venue["name"].strip().lower() == "mpsh":
+        markup = types.InlineKeyboardMarkup()
+        markup.add(
+            types.InlineKeyboardButton("Full", callback_data="mpsh_full"),
+            types.InlineKeyboardButton("Half", callback_data="mpsh_half")
+        )
+        bot.send_message(user_id, "Select MPSH booking type:", reply_markup=markup)
+        return
+
+    # Continue with normal flow for other venues
+    flow_data["booking_type"] = "full"  # Default for non-MPSH venues
+    show_existing_bookings_and_continue(user_id, chosen_venue)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("mpsh_"))
+def handle_mpsh_type_selection(call):
+    user_id = call.from_user.id
+    if user_id not in user_booking_flow:
+        bot.answer_callback_query(call.id, "Booking flow expired.")
+        return
+    
+    flow_data = user_booking_flow[user_id]
+    booking_type = "full" if call.data == "mpsh_full" else "half"
+    flow_data["booking_type"] = booking_type
+    
+    bot.edit_message_text(f"MPSH {booking_type.title()} selected.", 
+                         call.message.chat.id, call.message.message_id)
+    
+    show_existing_bookings_and_continue(user_id, flow_data["venue"])
+
+def show_existing_bookings_and_continue(user_id, chosen_venue):
     # Display confirmed bookings for the next 7 days
     start_of_week = dt.now(TZ).replace(hour=0, minute=0, second=0, microsecond=0)
     end_of_week = start_of_week + timedelta(days=7)
@@ -63,11 +95,15 @@ def handle_venue_selection(message):
             dur = parse_duration(b["duration"])
             b_end = (b_start + dur).strftime("%H:%M")
             b_start_str = b_start.strftime("%H:%M")
-            msg += f"Date: {b_date}, {b_start_str} - {b_end}\n"
-        msg += "\nPress /start to restart."
+            # Show booking type for MPSH
+            booking_type_display = ""
+            if chosen_venue["name"].strip().lower() == "mpsh":
+                booking_type = b.get('booking_type', 'full')
+                booking_type_display = f" [{booking_type.upper()}]"
+            msg += f"Date: {b_date}, {b_start_str} - {b_end}{booking_type_display}\n"
         bot.send_message(user_id, msg)
     else:
-        bot.send_message(user_id, f"No confirmed bookings for {chosen_venue['name']} in the next 7 days. Press /start to restart.")
+        bot.send_message(user_id, f"No confirmed bookings for {chosen_venue['name']} in the next 7 days.")
     
     send_date_selection(user_id)
 
@@ -132,8 +168,9 @@ def handle_start_time(message):
             user_booking_flow.pop(user_id, None)
             return
         
-        if check_start_conflict(flow_data["venue"], proposed_dt):
-            bot.send_message(user_id, "The specified start time conflicts with an existing confirmed booking. Exiting booking process.")
+        booking_type = flow_data.get("booking_type", "full")
+        if check_start_conflict(flow_data["venue"], proposed_dt, booking_type):
+            bot.send_message(user_id, "The specified start time conflicts with an existing confirmed booking. Exiting booking process. Press /start to restart.")
             user_booking_flow.pop(user_id, None)
             return
         flow_data["proposed_start"] = proposed_start
@@ -188,10 +225,16 @@ def handle_duration(message):
         if total_minutes > 1440:
             raise ValueError("Duration cannot exceed 24 hours")
         flow_data["proposed_duration"] = duration_str
+        
+        # Create timezone-aware datetime for conflict checking
         start_dt = dt.combine(flow_data["booking_date"].date(), flow_data["start_time"])
+        start_dt = TZ.localize(start_dt)  # Make it timezone-aware
+        
         end_dt = start_dt + timedelta(hours=hours, minutes=minutes)
-        if check_conflict(flow_data["venue"], start_dt, duration_str, user_id):
-            bot.send_message(user_id, "This time slot overlaps with an existing approved booking. Exiting booking process.")
+        
+        booking_type = flow_data.get("booking_type", "full")
+        if check_conflict(flow_data["venue"], start_dt, duration_str, user_id, booking_type):
+            bot.send_message(user_id, "This time slot overlaps with an existing approved booking. Exiting booking process. Press /start to restart.")
             user_booking_flow.pop(user_id, None)
             return
         markup = types.InlineKeyboardMarkup()
@@ -236,17 +279,19 @@ def handle_reason(message):
     venue = flow_data["venue"]
     booking_start = dt.combine(flow_data["booking_date"].date(), flow_data["start_time"])
     booking_start = TZ.localize(booking_start)
+    
     booking_created = create_booking(
         user_id=user_id,
         venue=venue,
         booking_start=booking_start,
         duration_text=flow_data["duration"],
         user_role=flow_data["user"]["role"],
-        reason=reason
+        reason=reason,
+        booking_type=flow_data.get("booking_type", "full")  # Pass booking type
     )
 
     if not booking_created:
-        bot.send_message(user_id, "Failed to create booking. The selected time is in the past. Press /start to restart.")
+        bot.send_message(user_id, "Failed to create booking. The selected time may be in the past. Press /start to restart.")
         user_booking_flow.pop(user_id, None)
         return
     
@@ -258,7 +303,13 @@ def handle_reason(message):
     user_role = flow_data["user"]["role"].strip().lower()
     user_block = flow_data["user"].get("block", "").strip().lower()
     
-    msg = f"Booking for {venue['name']} on {display_date} from {display_start} to {display_end} has been placed.\n"
+    # Add booking type display for MPSH
+    booking_type_display = ""
+    if venue_name == "mpsh":
+        booking_type = flow_data.get("booking_type", "full")
+        booking_type_display = f" [{booking_type.upper()}]"
+    
+    msg = f"Booking for {venue['name']}{booking_type_display} on {display_date} from {display_start} to {display_end} has been placed.\n"
     
     # Determine if booking needs approval
     needs_approval = False

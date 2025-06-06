@@ -46,16 +46,23 @@ def cancel_command(message):
         booking_start = dt.fromisoformat(b["booking_date"])
         dur = parse_duration(b["duration"])
         end_dt = booking_start + dur
-        start_str = booking_start.strftime("%Y-%m-%d %H:%M")
-        end_str   = end_dt.strftime("%Y-%m-%d %H:%M")
+        start_time = booking_start.strftime("%Y-%m-%d %H:%M")
+        end_time = end_dt.strftime("%Y-%m-%d %H:%M")
         venue_name = venue_dict.get(str(b["venue_id"]), "Unknown Venue")
-        user_name  = users_dict.get(str(b["user_id"]), "Unknown User")
+        user_name = users_dict.get(str(b["user_id"]), "Unknown User")
+        
+        # Add booking type display for MPSH
+        booking_type_display = ""
+        if venue_name.lower() == "mpsh":
+            booking_type = b.get('booking_type', 'full')
+            booking_type_display = f" [{booking_type.upper()}]"
+        
         line = (
             f"Booking ID: {b['booking_id']}\n"
-            f"Venue: {venue_name}\n"
+            f"Venue: {venue_name}{booking_type_display}\n"
             f"Name: {user_name}\n"
-            f"Start: {start_str}\n"
-            f"End: {end_str}\n"
+            f"Start: {start_time}\n"
+            f"End: {end_time}\n"
             f"Status: {b['status']}\n"
             f"Reason: {b.get('reason','')}\n"
             "----------------------"
@@ -191,9 +198,16 @@ def view_command(message):
         end_time = end_dt.strftime("%Y-%m-%d %H:%M")
         venue_name = venue_dict.get(str(b["venue_id"]), "Unknown Venue")
         user_name = users_dict.get(str(b["user_id"]), "Unknown User")
+        
+        # Add booking type display for MPSH
+        booking_type_display = ""
+        if venue_name.lower() == "mpsh":
+            booking_type = b.get('booking_type', 'full')
+            booking_type_display = f" [{booking_type.upper()}]"
+        
         line = (
             f"Booking ID: {b['booking_id']}\n"
-            f"Venue: {venue_name}\n"
+            f"Venue: {venue_name}{booking_type_display}\n"
             f"Name: {user_name}\n"
             f"Start: {start_time}\n"
             f"End: {end_time}\n"

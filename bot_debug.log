@@ -874,3 +874,28 @@ Traceback (most recent call last):
 TypeError: can't compare offset-naive and offset-aware datetimes
 2025-06-06 12:01:17,557 - config - CRITICAL - Bot is starting polling...
 2025-06-06 12:05:11,744 - config - CRITICAL - Bot is starting polling...
+2025-06-06 14:26:26,343 - config - CRITICAL - Bot is starting polling...
+2025-06-06 14:46:05,892 - config - CRITICAL - Bot is starting polling...
+2025-06-06 14:47:10,556 - config - CRITICAL - Bot is starting polling...
+2025-06-06 14:48:54,628 - config - CRITICAL - Bot is starting polling...
+2025-06-06 14:49:53,514 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/main.py", line 14, in <module>
+    bot.polling(none_stop=True)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/booking_flow.py", line 232, in handle_duration
+    if check_conflict(flow_data["venue"], start_dt, duration_str, user_id, booking_type):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/booking_utils.py", line 104, in check_conflict
+    if new_booking_start < confirmed_end and new_booking_end > confirmed_start:
+TypeError: can't compare offset-naive and offset-aware datetimes
+2025-06-06 14:52:26,272 - config - CRITICAL - Bot is starting polling...
+2025-06-06 14:55:34,294 - config - CRITICAL - Bot is starting polling...

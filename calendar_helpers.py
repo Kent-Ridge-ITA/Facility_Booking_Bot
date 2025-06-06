@@ -20,7 +20,16 @@ def add_event_to_calendar(booking, venue):
     end_dt = start_dt + duration_td
 
     # Get user info from booking if needed (omitted here; assume already available)
-    summary = f"{venue['name']}: {booking.get('reason', 'No Reason Provided')}"
+    venue_name = venue['name']
+    booking_type = booking.get('booking_type', 'full')
+    
+    # Add booking type display for MPSH
+    if venue_name.lower() == 'mpsh':
+        venue_display = f"{venue_name} [{booking_type.upper()}]"
+    else:
+        venue_display = venue_name
+    
+    summary = f"{venue_display}: {booking.get('reason', 'No Reason Provided')}"
     user_info = get_user_info(booking["user_id"])
     print(user_info)
     description = f"Booked by: {user_info.get('name', 'Unknown User')}"

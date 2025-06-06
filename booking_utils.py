@@ -3,7 +3,7 @@ from config import supabase
 from calendar_helpers import add_event_to_calendar, remove_event_from_calendar
 from db_helpers import parse_duration
 
-def create_booking(user_id, venue, booking_start, duration_text, user_role, reason):
+def create_booking(user_id, venue, booking_start, duration_text, user_role, reason, booking_type="full"):
     # Safety check: prevent creating bookings in the past
     from config import TZ
     current_time = dt.now(TZ)
@@ -42,7 +42,8 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
         "booking_date": booking_start_str,
         "duration": duration_text,
         "status": status,
-        "reason": reason
+        "reason": reason,
+        "booking_type": booking_type
     }
     supabase.table("bookings").insert(data).execute()
     result = supabase.table("bookings").select("*") \
@@ -51,6 +52,7 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
         .eq("booking_date", booking_start_str) \
         .eq("duration", duration_text) \
         .eq("reason", reason) \
+        .eq("booking_type", booking_type) \
         .execute()
     new_booking_data = result.data[0] if result.data else None
     
@@ -69,20 +71,24 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
     
     return True
 
-def check_conflict(venue, new_booking_start, duration_text, user_id):
+def check_conflict(venue, new_booking_start, duration_text, user_id, booking_type="full"):
     from config import TZ
     new_duration = parse_duration(duration_text)
-    new_booking_end = new_booking_start + new_duration
     
     # Ensure new_booking_start is timezone-aware
     if new_booking_start.tzinfo is None:
         new_booking_start = TZ.localize(new_booking_start)
+    
+    new_booking_end = new_booking_start + new_duration
     
     response = supabase.table("bookings").select("*") \
         .eq("venue_id", venue["venue_id"]) \
         .eq("status", "confirmed") \
         .execute()
     bookings = response.data if response.data else []
+    
+    venue_name = venue["name"].strip().lower()
+    
     for b in bookings:
         confirmed_start = dt.fromisoformat(b["booking_date"])
         # Make confirmed_start timezone-aware for comparison
@@ -95,17 +101,34 @@ def check_conflict(venue, new_booking_start, duration_text, user_id):
             confirmed_duration = timedelta(0)
         confirmed_end = confirmed_start + confirmed_duration
         
+        # Check for time overlap
         if new_booking_start < confirmed_end and new_booking_end > confirmed_start:
-            return True
+            # For MPSH, check booking type conflicts
+            if venue_name == "mpsh":
+                existing_booking_type = b.get("booking_type", "full")
+                # Full booking conflicts with any other booking
+                # Half booking conflicts with full booking
+                # Half booking can coexist with another half booking
+                if booking_type == "full" or existing_booking_type == "full":
+                    return True
+                # Both are half bookings - no conflict
+                else:
+                    continue
+            else:
+                # For other venues, any time overlap is a conflict
+                return True
     return False
 
-def check_start_conflict(venue, proposed_start):
+def check_start_conflict(venue, proposed_start, booking_type="full"):
     from config import TZ
     response = supabase.table("bookings").select("*") \
         .eq("venue_id", venue["venue_id"]) \
         .eq("status", "confirmed") \
         .execute()
     bookings = response.data if response.data else []
+    
+    venue_name = venue["name"].strip().lower()
+    
     for b in bookings:
         confirmed_start = dt.fromisoformat(b["booking_date"])
         # Make confirmed_start timezone-aware for comparison
@@ -123,7 +146,19 @@ def check_start_conflict(venue, proposed_start):
             proposed_start = TZ.localize(proposed_start)
         
         if confirmed_start <= proposed_start < confirmed_end:
-            return True
+            # For MPSH, check booking type conflicts
+            if venue_name == "mpsh":
+                existing_booking_type = b.get("booking_type", "full")
+                # Full booking conflicts with any other booking
+                # Half booking conflicts with full booking
+                if booking_type == "full" or existing_booking_type == "full":
+                    return True
+                # Both are half bookings - no conflict
+                else:
+                    continue
+            else:
+                # For other venues, any overlap is a conflict
+                return True
     return False
 
 def cancel_booking(booking_id, user_id, is_admin=False):
