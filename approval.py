@@ -1,7 +1,13 @@
 from datetime import datetime as dt
+from telebot import types
 from config import bot, supabase
 from db_helpers import get_user_info, get_all_venues, get_all_users, parse_duration
 from notifications import notify_approval
+
+# Add a global dictionary to track active approval sessions
+active_approval_sessions = {}
+# Add a dictionary to track booking message IDs for each user session
+booking_message_ids = {}
 
 @bot.message_handler(commands=['approve'])
 def approve_command(message):
@@ -23,9 +29,14 @@ def approve_command(message):
         bot.send_message(user["user_id"], "You do not have permission to approve bookings. Press /start to restart.")
         return
     
+    # Get current time to filter out past bookings
+    from config import TZ
+    current_time = dt.now(TZ)
+    
     response = supabase.table("bookings").select("*") \
         .eq("status", "pending approval") \
         .in_("venue_id", venue_ids) \
+        .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
         .order("booking_id", desc=False) \
         .execute()
     pending = response.data if response.data else []
@@ -35,12 +46,23 @@ def approve_command(message):
         bot.send_message(user["user_id"], f"No pending {approval_type} bookings for approval. Press /start to restart.")
         return
     
+    # Create new approval session - use integer timestamp to avoid precision issues
+    session_id = str(int(dt.now().timestamp()))
+    active_approval_sessions[user["user_id"]] = session_id
+    # Initialize message IDs tracking for this session
+    booking_message_ids[user["user_id"]] = []
+    
     venues = get_all_venues()
     users = get_all_users()
     venue_dict = {str(v["venue_id"]): v["name"] for v in venues}
     users_dict = {str(u["user_id"]): u["name"] for u in users}
     
-    msg = "Pending bookings for approval:\n"
+    # Send exit button keyboard
+    exit_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
+    exit_markup.add(types.KeyboardButton("/exit"))
+    bot.send_message(user["user_id"], "Use /exit to exit the approval process at any time.", reply_markup=exit_markup)
+    
+    # Send each booking with inline approve/reject buttons (include session_id in callback data)
     for b in pending:
         booking_start = dt.fromisoformat(b["booking_date"])
         dur = parse_duration(b["duration"])
@@ -49,52 +71,201 @@ def approve_command(message):
         end_str = end_dt.strftime("%Y-%m-%d %H:%M")
         venue_name = venue_dict.get(str(b["venue_id"]), "Unknown Venue")
         user_name = users_dict.get(str(b["user_id"]), "Unknown User")
-        line = (
-            f"Booking ID: {b['booking_id']}\n"
-            f"Venue: {venue_name}\n"
-            f"Name: {user_name}\n"
-            f"Start: {start_str}\n"
-            f"End: {end_str}\n"
-            f"Status: {b['status']}\n"
-            f"Reason: {b.get('reason', '')}\n"
-            "----------------------"
+        
+        # Add booking type display for MPSH
+        booking_type_display = ""
+        if venue_name.lower() == "mpsh":
+            booking_type = b.get('booking_type', 'full')
+            booking_type_display = f" [{booking_type.upper()}]"
+        
+        msg = (
+            f"📋 Booking ID: {b['booking_id']}\n"
+            f"🏢 Venue: {venue_name}{booking_type_display}\n"
+            f"👤 Name: {user_name}\n"
+            f"📅 Start: {start_str}\n"
+            f"⏰ End: {end_str}\n"
+            f"📝 Reason: {b.get('reason', 'No reason provided')}\n"
         )
-        msg += line + "\n"
+        
+        # Create inline keyboard with approve/reject buttons (include session_id)
+        inline_markup = types.InlineKeyboardMarkup()
+        inline_markup.add(
+            types.InlineKeyboardButton("✅ Approve", callback_data=f"approve_{b['booking_id']}_{session_id}"),
+            types.InlineKeyboardButton("❌ Reject", callback_data=f"reject_{b['booking_id']}_{session_id}")
+        )
+        
+        sent_message = bot.send_message(user["user_id"], msg, reply_markup=inline_markup)
+        # Track this booking message ID
+        booking_message_ids[user["user_id"]].append(sent_message.message_id)
+
+@bot.message_handler(commands=['exit'])
+def exit_approve_command(message):
+    user = get_user_info(message.from_user.id)
+    if not user:
+        return
     
-    msg += "\nPlease enter the Booking ID to approve:"
-    bot.send_message(user["user_id"], msg)
-    bot.register_next_step_handler(message, process_approval)
+    # Delete all booking messages with inline buttons
+    if user["user_id"] in booking_message_ids:
+        for message_id in booking_message_ids[user["user_id"]]:
+            try:
+                bot.delete_message(user["user_id"], message_id)
+            except Exception as e:
+                # If message deletion fails (already deleted/modified), just continue
+                pass
+        # Clear the message IDs for this user
+        booking_message_ids.pop(user["user_id"], None)
+    
+    # Mark the approval session as inactive
+    if user["user_id"] in active_approval_sessions:
+        active_approval_sessions.pop(user["user_id"], None)
+    
+    # Remove the exit keyboard and send main menu
+    from registration import send_main_menu
+    bot.send_message(user["user_id"], "Exited approval process. All booking messages have been removed.")
+    send_main_menu(user["user_id"])
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("approve_") or call.data.startswith("reject_"))
+def handle_approval_action(call):
+    user = get_user_info(call.from_user.id)
+    if not user:
+        bot.answer_callback_query(call.id, "Access denied.")
+        return
+    
+    user_role = user["role"].strip().lower()
+    if user_role not in ["jcrc", "block head"]:
+        bot.answer_callback_query(call.id, "You do not have permission to approve bookings.")
+        return
+    
+    # Parse callback data to extract session_id
+    callback_parts = call.data.split("_")
+    if len(callback_parts) < 3:
+        bot.answer_callback_query(call.id, "Invalid callback data.")
+        return
+    
+    action = callback_parts[0]
+    booking_id = int(callback_parts[1])
+    session_id = callback_parts[2]
+    
+    # Check if the approval session is still active
+    current_session = active_approval_sessions.get(user["user_id"])
+    if current_session != session_id:
+        bot.answer_callback_query(call.id, "This approval session has expired. Please start a new /approve process.")
+        try:
+            bot.edit_message_text("⚠️ Approval session expired. Please use /approve to start a new session.", 
+                                 call.message.chat.id, call.message.message_id, reply_markup=None)
+        except Exception:
+            # If message edit fails (already modified), just ignore
+            pass
+        return
+    
+    # Get the booking details
+    res = supabase.table("bookings").select("*").eq("booking_id", booking_id).execute()
+    if not res.data:
+        bot.answer_callback_query(call.id, "Booking not found.")
+        try:
+            bot.edit_message_text("❌ Booking not found.", call.message.chat.id, call.message.message_id, reply_markup=None)
+        except Exception:
+            pass
+        return
+    
+    booking = res.data[0]
+    
+    # Check if booking is still pending
+    if booking["status"] != "pending approval":
+        bot.answer_callback_query(call.id, "Booking is no longer pending approval.")
+        try:
+            bot.edit_message_text("⚠️ Booking is no longer pending approval.", call.message.chat.id, call.message.message_id, reply_markup=None)
+        except Exception:
+            pass
+        return
+    
+    # Verify user has permission for this specific booking
+    venue_data = supabase.table("venues").select("*").eq("venue_id", booking["venue_id"]).execute()
+    if not venue_data.data:
+        bot.answer_callback_query(call.id, "Venue not found.")
+        return
+    
+    venue = venue_data.data[0]
+    venue_name = venue["name"].strip().lower()
+    
+    # Check permission based on user role and venue
+    has_permission = False
+    if user_role == "jcrc" and venue_name in ["reading room", "dining hall"]:
+        has_permission = True
+    elif user_role == "block head":
+        user_block = user.get("block", "").strip()
+        if "blk lounge" in venue_name:
+            venue_block = venue_name.replace(" lounge", "")
+            if user_block.lower() == venue_block:
+                has_permission = True
+    
+    if not has_permission:
+        bot.answer_callback_query(call.id, "You don't have permission for this venue.")
+        return
+    
+    # Remove this message ID from tracking since it will become a confirmation message
+    if user["user_id"] in booking_message_ids and call.message.message_id in booking_message_ids[user["user_id"]]:
+        booking_message_ids[user["user_id"]].remove(call.message.message_id)
+    
+    if action == "approve":
+        # Approve the booking
+        supabase.table("bookings").update({"status": "confirmed"}).eq("booking_id", booking_id).execute()
+        
+        # Get updated booking data
+        updated_res = supabase.table("bookings").select("*").eq("booking_id", booking_id).execute()
+        updated_booking = updated_res.data[0] if updated_res.data else None
+        
+        if updated_booking:
+            # Add to calendar if not already added
+            if not updated_booking.get("calendar_event_id"):
+                from calendar_helpers import add_event_to_calendar
+                event_id = add_event_to_calendar(updated_booking, venue)
+                supabase.table("bookings").update({"calendar_event_id": event_id}).eq("booking_id", booking_id).execute()
+            
+            # Send notification
+            notify_approval(updated_booking)
+        
+        bot.answer_callback_query(call.id, "Booking approved!")
+        try:
+            bot.edit_message_text(f"✅ Booking {booking_id} has been approved.", call.message.chat.id, call.message.message_id, reply_markup=None)
+        except Exception:
+            pass
+        
+    else:  # reject
+        # Reject the booking
+        supabase.table("bookings").update({"status": "rejected"}).eq("booking_id", booking_id).execute()
+        
+        # Notify user of rejection
+        try:
+            user_info = get_user_info(booking["user_id"])
+            user_name = user_info.get("name", "Unknown User") if user_info else "Unknown User"
+            
+            booking_start = dt.fromisoformat(booking["booking_date"])
+            dur = parse_duration(booking["duration"])
+            end_dt = booking_start + dur
+            start_str = booking_start.strftime("%Y-%m-%d %H:%M")
+            end_str = end_dt.strftime("%Y-%m-%d %H:%M")
+            
+            rejection_msg = (
+                f"Your booking has been rejected.\n\n"
+                f"📋 Booking ID: {booking_id}\n"
+                f"🏢 Venue: {venue['name']}\n"
+                f"📅 Start: {start_str}\n"
+                f"⏰ End: {end_str}\n"
+                f"📝 Reason: {booking.get('reason', 'No reason provided')}\n"
+            )
+            
+            bot.send_message(booking["user_id"], rejection_msg)
+        except Exception as e:
+            print(f"Failed to notify user of rejection: {e}")
+        
+        bot.answer_callback_query(call.id, "Booking rejected!")
+        try:
+            bot.edit_message_text(f"❌ Booking {booking_id} has been rejected.", call.message.chat.id, call.message.message_id, reply_markup=None)
+        except Exception:
+            pass
 
 def get_venue_ids_for(names):
     from db_helpers import get_all_venues
     venues = get_all_venues()
     return [v["venue_id"] for v in venues if v["name"].strip().lower() in [n.lower() for n in names]]
-
-def process_approval(message):
-    user = get_user_info(message.from_user.id)
-    if not user:
-        return
-    try:
-        booking_id = int(message.text.strip())
-        res = supabase.table("bookings").select("*").eq("booking_id", booking_id).execute()
-        if not res.data:
-            bot.send_message(message.from_user.id, "Invalid Booking ID: booking not found. Press /start to restart.")
-            return
-        booking = res.data[0]
-        if booking["status"] != "pending approval":
-            bot.send_message(message.from_user.id, "Invalid Booking ID: booking is not pending approval. Press /start to restart.")
-            return
-        supabase.table("bookings").update({"status": "confirmed"}).eq("booking_id", booking_id).execute()
-        updated_res = supabase.table("bookings").select("*").eq("booking_id", booking_id).execute()
-        updated_booking = updated_res.data[0] if updated_res.data else None
-        if updated_booking:
-            if not updated_booking.get("calendar_event_id"):
-                from calendar_helpers import add_event_to_calendar
-                venue_data = supabase.table("venues").select("*").eq("venue_id", updated_booking["venue_id"]).execute()
-                venue = venue_data.data[0] if venue_data.data else {}
-                event_id = add_event_to_calendar(updated_booking, venue)
-                supabase.table("bookings").update({"calendar_event_id": event_id}).eq("booking_id", booking_id).execute()
-            notify_approval(updated_booking)
-        bot.send_message(message.from_user.id, f"Booking {booking_id} approved. Press /start to restart.")
-    except ValueError:
-        bot.send_message(message.from_user.id, "Invalid Booking ID. Press /start to restart.")
