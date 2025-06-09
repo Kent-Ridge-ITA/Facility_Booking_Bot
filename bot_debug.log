@@ -931,3 +931,50 @@ NameError: name 'types' is not defined
 2025-06-06 17:26:23,686 - config - CRITICAL - Bot is starting polling...
 2025-06-06 17:48:01,861 - config - CRITICAL - Bot is starting polling...
 2025-06-06 17:49:07,514 - config - CRITICAL - Bot is starting polling...
+2025-06-09 15:52:20,801 - config - CRITICAL - Bot is starting polling...
+2025-06-09 15:58:15,670 - config - CRITICAL - Bot is starting polling...
+2025-06-09 16:00:32,548 - config - CRITICAL - Bot is starting polling...
+2025-06-09 16:01:47,872 - config - CRITICAL - Bot is starting polling...
+2025-06-09 16:07:30,191 - config - CRITICAL - Bot is starting polling...
+2025-06-09 16:08:51,120 - config - CRITICAL - Bot is starting polling...
+2025-06-09 16:08:53,105 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/main.py", line 14, in <module>
+    bot.polling(none_stop=True)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 9233, in _run_middlewares_and_handler
+    result = handler['function'](message)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/view_cancel.py", line 350, in view_command
+    f"📊 Status: {b['status']} {status_indicator}\n"
+NameError: name 'status_indicator' is not defined
+2025-06-09 16:09:17,790 - config - CRITICAL - Bot is starting polling...
+2025-06-09 16:09:34,116 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/main.py", line 14, in <module>
+    bot.polling(none_stop=True)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 9233, in _run_middlewares_and_handler
+    result = handler['function'](message)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/view_cancel.py", line 93, in cancel_command
+    if booking_start <= current_time < end_dt:
+TypeError: can't compare offset-naive and offset-aware datetimes
+2025-06-09 16:12:05,637 - config - CRITICAL - Bot is starting polling...
+2025-06-09 16:12:53,830 - config - CRITICAL - Bot is starting polling...

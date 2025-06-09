@@ -59,8 +59,8 @@ def approve_command(message):
     
     # Send exit button keyboard
     exit_markup = types.ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=False)
-    exit_markup.add(types.KeyboardButton("/exit"))
-    bot.send_message(user["user_id"], "Use /exit to exit the approval process at any time.", reply_markup=exit_markup)
+    exit_markup.add(types.KeyboardButton("/exit_approve"))
+    bot.send_message(user["user_id"], "Use /exit_approve to exit the approval process at any time.", reply_markup=exit_markup)
     
     # Send each booking with inline approve/reject buttons (include session_id in callback data)
     for b in pending:
@@ -98,7 +98,7 @@ def approve_command(message):
         # Track this booking message ID
         booking_message_ids[user["user_id"]].append(sent_message.message_id)
 
-@bot.message_handler(commands=['exit'])
+@bot.message_handler(commands=['exit_approve'])
 def exit_approve_command(message):
     user = get_user_info(message.from_user.id)
     if not user:
