@@ -1,6 +1,6 @@
 from config import bot, supabase, user_booking_flow, BLOCKS
 from telebot import types
-from db_helpers import get_user_info
+from db_helpers import get_user_info, get_all_venues, user_can_access_venue
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -80,6 +80,13 @@ def send_main_menu(chat_id):
     # Add edit button for users with instant booking privileges
     if user and user["role"].strip().lower() in ["jcrc", "captain", "chairman", "block head"]:
         buttons.append(types.KeyboardButton("/edit"))
+    # Add mass book button for captains and chairmen who can access MPSH
+    if user and user["role"].strip().lower() in ["captain", "chairman"]:
+        # Check if they can access MPSH
+        venues = get_all_venues()
+        mpsh_venue = next((v for v in venues if v["name"].strip().lower() == "mpsh"), None)
+        if mpsh_venue and user_can_access_venue(user, mpsh_venue):
+            buttons.append(types.KeyboardButton("/mass_book"))
     markup.add(*buttons)
     bot.send_message(chat_id, "🎯 Choose an option:", reply_markup=markup)
 
