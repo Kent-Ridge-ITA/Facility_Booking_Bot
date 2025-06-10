@@ -7,6 +7,7 @@ import admin
 import approval
 import view_cancel
 import restart
+import edit_booking
 
 if __name__ == "__main__":
     logger.critical("Bot is starting polling...")
