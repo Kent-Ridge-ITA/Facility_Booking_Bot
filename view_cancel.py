@@ -37,7 +37,7 @@ def cancel_command(message):
         # Admin can cancel all ongoing and future bookings (exclude rejected and cancelled)
         admin_bookings_data = supabase.table("bookings").select("*") \
             .not_.in_("status", ["cancelled", "rejected"]) \
-            .order("booking_id", desc=False) \
+            .order("booking_date", desc=False) \
             .execute()
         all_bookings = admin_bookings_data.data if admin_bookings_data.data else []
         # Filter to only ongoing and future bookings
@@ -47,7 +47,7 @@ def cancel_command(message):
         user_bookings_data = supabase.table("bookings").select("*") \
             .eq("user_id", user["user_id"]) \
             .not_.in_("status", ["cancelled", "rejected"]) \
-            .order("booking_id", desc=False) \
+            .order("booking_date", desc=False) \
             .execute()
         all_bookings = user_bookings_data.data if user_bookings_data.data else []
         # Filter to only ongoing and future bookings
@@ -234,14 +234,14 @@ def view_command(message):
         jcrc_venue_bookings = supabase.table("bookings").select("*") \
             .in_("venue_id", venue_ids) \
             .eq("status", "confirmed") \
-            .order("booking_id", desc=False) \
+            .order("booking_date", desc=False) \
             .execute()
         
         # Get all their personal bookings (exclude rejected and cancelled)
         personal_bookings_data = supabase.table("bookings").select("*") \
             .eq("user_id", user["user_id"]) \
             .not_.in_("status", ["cancelled", "rejected"]) \
-            .order("booking_id", desc=False) \
+            .order("booking_date", desc=False) \
             .execute()
         personal_bookings = personal_bookings_data.data if personal_bookings_data.data else []
         
@@ -255,8 +255,8 @@ def view_command(message):
                 booking_ids.add(b["booking_id"])
         # Filter to only ongoing and future bookings
         bookings = [b for b in combined_bookings if is_booking_ongoing_or_future(b["booking_date"], b["duration"], current_time)]
-        # Sort by booking_id
-        bookings = sorted(bookings, key=lambda x: x["booking_id"])
+        # Sort by booking_date (time start ascending)
+        bookings = sorted(bookings, key=lambda x: x["booking_date"])
     elif user_role == "block head":
         # Block Head can view their block's lounge bookings + their own bookings
         user_block = user.get("block", "").strip()
@@ -267,14 +267,14 @@ def view_command(message):
         lounge_bookings = supabase.table("bookings").select("*") \
             .in_("venue_id", lounge_venue_ids) \
             .eq("status", "confirmed") \
-            .order("booking_id", desc=False) \
+            .order("booking_date", desc=False) \
             .execute()
         
         # Get all their personal bookings (exclude rejected and cancelled)
         personal_bookings_data = supabase.table("bookings").select("*") \
             .eq("user_id", user["user_id"]) \
             .not_.in_("status", ["cancelled", "rejected"]) \
-            .order("booking_id", desc=False) \
+            .order("booking_date", desc=False) \
             .execute()
         personal_bookings = personal_bookings_data.data if personal_bookings_data.data else []
         
@@ -288,15 +288,15 @@ def view_command(message):
                 booking_ids.add(b["booking_id"])
         # Filter to only ongoing and future bookings
         bookings = [b for b in combined_bookings if is_booking_ongoing_or_future(b["booking_date"], b["duration"], current_time)]
-        # Sort by booking_id
-        bookings = sorted(bookings, key=lambda x: x["booking_id"])
+        # Sort by booking_date (time start ascending)
+        bookings = sorted(bookings, key=lambda x: x["booking_date"])
     else:
         is_admin = (user["role"].strip().lower() == "admin")
         if is_admin:
             # Admin sees all ongoing and future bookings (exclude rejected and cancelled)
             admin_bookings_data = supabase.table("bookings").select("*") \
                 .not_.in_("status", ["cancelled", "rejected"]) \
-                .order("booking_id", desc=False) \
+                .order("booking_date", desc=False) \
                 .execute()
             all_bookings = admin_bookings_data.data if admin_bookings_data.data else []
             # Filter to only ongoing and future bookings
@@ -306,7 +306,7 @@ def view_command(message):
             user_bookings_data = supabase.table("bookings").select("*") \
                 .eq("user_id", user["user_id"]) \
                 .not_.in_("status", ["cancelled", "rejected"]) \
-                .order("booking_id", desc=False) \
+                .order("booking_date", desc=False) \
                 .execute()
             all_bookings = user_bookings_data.data if user_bookings_data.data else []
             # Filter to only ongoing and future bookings

@@ -58,7 +58,7 @@ def edit_command(message):
     user_bookings_data = supabase.table("bookings").select("*") \
         .eq("user_id", user["user_id"]) \
         .eq("status", "confirmed") \
-        .order("booking_id", desc=False) \
+        .order("booking_date", desc=False) \
         .execute()
     all_bookings = user_bookings_data.data if user_bookings_data.data else []
     

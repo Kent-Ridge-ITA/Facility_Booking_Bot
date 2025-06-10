@@ -135,7 +135,7 @@ def approve_command(message):
         .eq("status", "pending approval") \
         .in_("venue_id", venue_ids) \
         .gte("booking_date", current_time.strftime("%Y-%m-%d %H:%M:%S")) \
-        .order("booking_id", desc=False) \
+        .order("booking_date", desc=False) \
         .execute()
     pending = response.data if response.data else []
     

@@ -46,35 +46,8 @@ def handle_venue_selection(message):
     flow_data["venue"] = chosen_venue
     flow_data["step"] = 2
 
-    # Check if venue is MPSH to ask for booking type
-    if chosen_venue["name"].strip().lower() == "mpsh":
-        markup = types.InlineKeyboardMarkup()
-        markup.add(
-            types.InlineKeyboardButton("Full", callback_data="mpsh_full"),
-            types.InlineKeyboardButton("Half", callback_data="mpsh_half")
-        )
-        bot.send_message(user_id, "Select MPSH booking type:", reply_markup=markup)
-        return
-
-    # Continue with normal flow for other venues
-    flow_data["booking_type"] = "full"  # Default for non-MPSH venues
+    # Show existing bookings first for all venues
     show_existing_bookings_and_continue(user_id, chosen_venue)
-
-@bot.callback_query_handler(func=lambda call: call.data.startswith("mpsh_"))
-def handle_mpsh_type_selection(call):
-    user_id = call.from_user.id
-    if user_id not in user_booking_flow:
-        bot.answer_callback_query(call.id, "Booking flow expired.")
-        return
-    
-    flow_data = user_booking_flow[user_id]
-    booking_type = "full" if call.data == "mpsh_full" else "half"
-    flow_data["booking_type"] = booking_type
-    
-    bot.edit_message_text(f"MPSH {booking_type.title()} selected.", 
-                         call.message.chat.id, call.message.message_id)
-    
-    show_existing_bookings_and_continue(user_id, flow_data["venue"])
 
 def show_existing_bookings_and_continue(user_id, chosen_venue):
     # Display confirmed bookings for the next 7 days
@@ -85,6 +58,7 @@ def show_existing_bookings_and_continue(user_id, chosen_venue):
         .eq("status", "confirmed") \
         .gte("booking_date", start_of_week.strftime("%Y-%m-%d 00:00:00")) \
         .lte("booking_date", end_of_week.strftime("%Y-%m-%d 23:59:59")) \
+        .order("booking_date", desc=False) \
         .execute()
     bookings = response.data if response.data else []
     if bookings:
@@ -104,6 +78,34 @@ def show_existing_bookings_and_continue(user_id, chosen_venue):
         bot.send_message(user_id, msg)
     else:
         bot.send_message(user_id, f"✅ No confirmed bookings for {chosen_venue['name']} in the next 7 days.")
+    
+    # Check if venue is MPSH to ask for booking type AFTER showing existing bookings
+    if chosen_venue["name"].strip().lower() == "mpsh":
+        markup = types.InlineKeyboardMarkup()
+        markup.add(
+            types.InlineKeyboardButton("Full", callback_data="mpsh_full"),
+            types.InlineKeyboardButton("Half", callback_data="mpsh_half")
+        )
+        bot.send_message(user_id, "Select MPSH booking type:", reply_markup=markup)
+        return
+
+    # Continue with normal flow for other venues
+    user_booking_flow[user_id]["booking_type"] = "full"  # Default for non-MPSH venues
+    send_date_selection(user_id)
+
+@bot.callback_query_handler(func=lambda call: call.data.startswith("mpsh_"))
+def handle_mpsh_type_selection(call):
+    user_id = call.from_user.id
+    if user_id not in user_booking_flow:
+        bot.answer_callback_query(call.id, "Booking flow expired.")
+        return
+    
+    flow_data = user_booking_flow[user_id]
+    booking_type = "full" if call.data == "mpsh_full" else "half"
+    flow_data["booking_type"] = booking_type
+    
+    bot.edit_message_text(f"MPSH {booking_type.title()} selected.", 
+                         call.message.chat.id, call.message.message_id)
     
     send_date_selection(user_id)
 
