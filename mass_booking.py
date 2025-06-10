@@ -14,10 +14,17 @@ def mass_book_command(message):
         return
     
     user_role = user["role"].strip().lower()
+    user_cca = user.get("cca", "").strip()
     
-    # Check if user has permission (Captain or Chairman)
-    if user_role not in ["captain", "chairman"]:
-        bot.send_message(user["user_id"], "You do not have permission to use mass booking. Only Captains and Chairmen can use this feature. Press /start to restart.")
+    # Check if user has permission (Captain, Chairman, or JCRC with Sports D/Culture D)
+    has_permission = False
+    if user_role in ["captain", "chairman"]:
+        has_permission = True
+    elif user_role == "jcrc" and user_cca in ["Sports D", "Culture D"]:
+        has_permission = True
+    
+    if not has_permission:
+        bot.send_message(user["user_id"], "You do not have permission to use mass booking. Only Captains, Chairmen, and JCRC (Sports D/Culture D) can use this feature. Press /start to restart.")
         return
     
     # Get MPSH venue and check if user has access
@@ -76,7 +83,15 @@ def handle_mass_booking_input(message):
     
     # Check permission again
     user_role = user["role"].strip().lower()
-    if user_role not in ["captain", "chairman"]:
+    user_cca = user.get("cca", "").strip()
+    
+    has_permission = False
+    if user_role in ["captain", "chairman"]:
+        has_permission = True
+    elif user_role == "jcrc" and user_cca in ["Sports D", "Culture D"]:
+        has_permission = True
+    
+    if not has_permission:
         bot.send_message(user_id, "Permission denied. Press /start to restart.")
         return
     

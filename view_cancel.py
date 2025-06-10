@@ -230,25 +230,28 @@ def view_command(message):
     
     if user_role == "jcrc":
         if user_cca == "Welfare D":
-            # JCRC Welfare D can view Dining Hall, Reading Room bookings + their own bookings
+            # JCRC Welfare D can view ALL Dining Hall, Reading Room bookings + their own bookings
             venue_ids = get_venue_ids_for(["Dining Hall", "Reading Room"])
             
-            # Get confirmed bookings for JCRC Welfare D venues
+            # Get ALL confirmed bookings for JCRC Welfare D venues
+            jcrc_venue_bookings = supabase.table("bookings").select("*") \
+                .in_("venue_id", venue_ids) \
+                .eq("status", "confirmed") \
+                .order("booking_date", desc=False) \
+                .execute()
+        elif user_cca in ["Sports D", "Culture D"]:
+            # JCRC Sports D and Culture D can view ALL MPSH bookings + their own bookings
+            venue_ids = get_venue_ids_for(["MPSH"])
+            
+            # Get ALL bookings for MPSH
             jcrc_venue_bookings = supabase.table("bookings").select("*") \
                 .in_("venue_id", venue_ids) \
                 .eq("status", "confirmed") \
                 .order("booking_date", desc=False) \
                 .execute()
         else:
-            # Other JCRC members can view MPSH bookings + their own bookings
-            venue_ids = get_venue_ids_for(["MPSH"])
-            
-            # Get confirmed bookings for MPSH
-            jcrc_venue_bookings = supabase.table("bookings").select("*") \
-                .in_("venue_id", venue_ids) \
-                .eq("status", "confirmed") \
-                .order("booking_date", desc=False) \
-                .execute()
+            # Other JCRC members don't have special venue viewing privileges
+            jcrc_venue_bookings = None
         
         # Get all their personal bookings (exclude rejected and cancelled)
         personal_bookings_data = supabase.table("bookings").select("*") \
@@ -259,7 +262,11 @@ def view_command(message):
         personal_bookings = personal_bookings_data.data if personal_bookings_data.data else []
         
         # Combine and filter for ongoing/future bookings
-        all_bookings = (jcrc_venue_bookings.data if jcrc_venue_bookings.data else []) + personal_bookings
+        if jcrc_venue_bookings:
+            all_bookings = (jcrc_venue_bookings.data if jcrc_venue_bookings.data else []) + personal_bookings
+        else:
+            all_bookings = personal_bookings
+        
         booking_ids = set()
         combined_bookings = []
         for b in all_bookings:

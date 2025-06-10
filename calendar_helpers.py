@@ -1,3 +1,4 @@
+import os
 import google.oauth2.service_account
 from googleapiclient.discovery import build
 from datetime import datetime as dt
@@ -6,9 +7,19 @@ from db_helpers import get_user_info
 
 # Google Calendar setup
 SCOPES = ['https://www.googleapis.com/auth/calendar']
-SERVICE_ACCOUNT_FILE = r'facility-booking-bot-05fa8655aa47.json'
-calendar_id = 'fde2719902f4ca8ada620b4922fa8365a333b2cf79885e048e107dd6d7834b9a@group.calendar.google.com'
+SERVICE_ACCOUNT_FILES = [
+    'facility-booking-bot-3b36d365b812.json',
+    'facility-booking-bot-05fa8655aa47.json',
+    'facility-booking-bot-cc90373ee34e.json'
+]
 
+# Find the first available service account file
+SERVICE_ACCOUNT_FILE = next((file for file in SERVICE_ACCOUNT_FILES if os.path.exists(file)), None)
+
+if not SERVICE_ACCOUNT_FILE:
+    raise FileNotFoundError("No valid service account file found.")
+
+calendar_id = 'fde2719902f4ca8ada620b4922fa8365a333b2cf79885e048e107dd6d7834b9a@group.calendar.google.com'
 credentials = google.oauth2.service_account.Credentials.from_service_account_file(
     SERVICE_ACCOUNT_FILE, scopes=SCOPES)
 calendar_service = build('calendar', 'v3', credentials=credentials)

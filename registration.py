@@ -84,14 +84,14 @@ def send_main_menu(chat_id):
     # Show approve button for JCRC Welfare D and Block Heads only
     user_role = user["role"].strip().lower() if user else ""
     user_cca = user.get("cca", "").strip() if user else ""
-    if (user_role == "jcrc" and user_cca == "Welfare D") or user_role == "block head":
+    if (user_role == "jcrc" and user_cca == "welfare d") or user_role == "block head":
         buttons.append(types.KeyboardButton("/approve"))
     
     # Add edit button for users with instant booking privileges
     if user and user["role"].strip().lower() in ["jcrc", "captain", "chairman", "block head"]:
         buttons.append(types.KeyboardButton("/edit"))
-    # Add mass book button for captains and chairmen who can access MPSH
-    if user and user["role"].strip().lower() in ["captain", "chairman"]:
+    # Add mass book button for captains, chairmen, and JCRC (Sports D/Culture D) who can access MPSH
+    if user and user["role"].strip().lower() in ["captain", "chairman", "jcrc"]:
         # Check if they can access MPSH
         venues = get_all_venues()
         mpsh_venue = next((v for v in venues if v["name"].strip().lower() == "mpsh"), None)

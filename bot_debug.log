@@ -1005,3 +1005,68 @@ TypeError: can't compare offset-naive and offset-aware datetimes
 2025-06-10 16:43:40,114 - config - CRITICAL - Bot is starting polling...
 2025-06-10 16:52:18,234 - config - CRITICAL - Bot is starting polling...
 2025-06-10 17:07:04,658 - config - CRITICAL - Bot is starting polling...
+2025-06-10 19:36:04,342 - config - CRITICAL - Bot is starting polling...
+2025-06-10 19:39:54,781 - config - CRITICAL - Bot is starting polling...
+2025-06-10 19:41:46,366 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "d:\VSCode\Projects\Facility_Booking_Bot\main.py", line 16, in <module>
+    bot.polling(none_stop=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            logger_level=logger_level, allowed_updates=allowed_updates)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\util.py", line 93, in run
+    task(*args, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^
+  File "d:\VSCode\Projects\Facility_Booking_Bot\booking_flow.py", line 285, in handle_reason
+    booking_created = create_booking(
+        user_id=user_id,
+    ...<5 lines>...
+        booking_type=flow_data.get("booking_type", "full")  # Pass booking type
+    )
+  File "d:\VSCode\Projects\Facility_Booking_Bot\booking_utils.py", line 61, in create_booking
+    event_id = add_event_to_calendar(new_booking_data, venue)
+  File "d:\VSCode\Projects\Facility_Booking_Bot\calendar_helpers.py", line 70, in add_event_to_calendar
+    created_event = calendar_service.events().insert(calendarId=calendar_id, body=event).execute()
+                                                                ^^^^^^^^^^^
+NameError: name 'calendar_id' is not defined
+2025-06-10 19:43:23,065 - config - CRITICAL - Bot is starting polling...
+2025-06-10 19:48:42,441 - config - CRITICAL - Bot is starting polling...
+2025-06-10 19:54:04,729 - config - CRITICAL - Bot is starting polling...
+2025-06-10 19:55:25,726 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "d:\VSCode\Projects\Facility_Booking_Bot\main.py", line 16, in <module>
+    bot.polling(none_stop=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            logger_level=logger_level, allowed_updates=allowed_updates)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\util.py", line 93, in run
+    task(*args, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 9233, in _run_middlewares_and_handler
+    result = handler['function'](message)
+  File "d:\VSCode\Projects\Facility_Booking_Bot\view_cancel.py", line 262, in view_command
+    all_bookings = (jcrc_venue_bookings.data if jcrc_venue_bookings.data else []) + personal_bookings
+                                                ^^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'jcrc_venue_bookings' where it is not associated with a value
+2025-06-10 19:57:47,496 - config - CRITICAL - Bot is starting polling...
+2025-06-10 20:05:57,980 - config - CRITICAL - Bot is starting polling...

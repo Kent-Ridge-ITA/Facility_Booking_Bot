@@ -19,11 +19,13 @@ def can_user_edit_venue(user, venue_name):
     # JCRC can edit Reading Room and Dining Hall (they have instant booking)
     if user_role == "jcrc" and venue_name in ["reading room", "dining hall"]:
         return True
-    # Captains (all CCAs) and Chairman of Dance can edit MPSH (they have instant booking)
+    # Captains (all CCAs), Chairman of Dance, and JCRC (Sports D/Culture D) can edit MPSH (they have instant booking)
     elif venue_name == "mpsh":
         if user_role == "captain":
             return True
         elif user_role == "chairman" and user_cca == "Dance":
+            return True
+        elif user_role == "jcrc" and user_cca in ["Sports D", "Culture D"]:
             return True
     # Only Chairman of Rockers or Inspire can edit Band Room (they have instant booking)
     elif venue_name == "band room":
