@@ -34,7 +34,13 @@ def add_event_to_calendar(booking, venue):
     print(user_info)
     description = f"Booked by: {user_info.get('name', 'Unknown User')}"
     if user_info.get("role", "Resident") != "Resident":
-        description += f", ({user_info.get('role','')}, {user_info.get('cca','')})"
+        user_role = user_info.get('role', '')
+        user_cca = user_info.get('cca', '')
+        # Only show CCA if it's not "No CCA"
+        if user_cca and user_cca.lower() != "no cca":
+            description += f", ({user_role} ({user_cca}))"
+        else:
+            description += f", ({user_role})"
     description += f" from {user_info.get('block', 'No Block')}"
     color_id = VENUE_COLORS.get(venue["name"], "1")
     event = {

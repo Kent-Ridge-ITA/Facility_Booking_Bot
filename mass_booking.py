@@ -30,8 +30,14 @@ def mass_book_command(message):
     
     # Check if user can access MPSH venue based on database permissions
     if not user_can_access_venue(user, mpsh_venue):
-        user_cca = user.get("cca", "No CCA")
-        bot.send_message(user["user_id"], f"❌ You do not have access to MPSH. Your current role is {user['role']} of {user_cca}. Please contact an administrator if you believe this is an error. Press /start to restart.")
+        user_cca = user.get("cca", "")
+        user_role = user["role"]
+        # Don't show "No CCA"
+        if user_cca and user_cca.lower() != "no cca":
+            role_display = f"{user_role} ({user_cca})"
+        else:
+            role_display = user_role
+        bot.send_message(user["user_id"], f"❌ You do not have access to MPSH. Your current role is {role_display}. Please contact an administrator if you believe this is an error. Press /start to restart.")
         return
     
     # Send example message
@@ -84,8 +90,14 @@ def handle_mass_booking_input(message):
     
     # Re-check if user can access MPSH venue
     if not user_can_access_venue(user, mpsh_venue):
-        user_cca = user.get("cca", "No CCA")
-        bot.send_message(user_id, f"❌ You do not have access to MPSH. Your current role is {user['role']} of {user_cca}. Please contact an administrator if you believe this is an error. Press /start to restart.")
+        user_cca = user.get("cca", "")
+        user_role = user["role"]
+        # Don't show "No CCA"
+        if user_cca and user_cca.lower() != "no cca":
+            role_display = f"{user_role} ({user_cca})"
+        else:
+            role_display = user_role
+        bot.send_message(user_id, f"❌ You do not have access to MPSH. Your current role is {role_display}. Please contact an administrator if you believe this is an error. Press /start to restart.")
         return
     
     input_text = message.text.strip()

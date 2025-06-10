@@ -59,13 +59,23 @@ def callback_set_cca(call):
         "role": new_role,
         "cca": new_cca
     }).execute()
+    
+    # Format the role display - don't show "No CCA"
+    if new_cca and new_cca.lower() != "no cca":
+        role_display = f"{new_role} ({new_cca})"
+    else:
+        role_display = new_role
+    
     bot.edit_message_text(
-        f"User {target_user_id} updated: Role = {ROLES[new_role]}, CCA = {new_cca if new_cca else 'None'}.",
+        f"User {target_user_id} updated: {role_display}.",
         call.message.chat.id,
         call.message.message_id
     )
     try:
-        bot.send_message(target_user_id, f"You have been updated as: {ROLES[new_role]} of {new_cca if new_cca else 'None'}.")
+        if new_cca and new_cca.lower() != "no cca":
+            bot.send_message(target_user_id, f"You have been updated as: {new_role} ({new_cca}).")
+        else:
+            bot.send_message(target_user_id, f"You have been updated as: {new_role}.")
     except Exception as e:
         print(f"Error sending update notification to user {target_user_id}: {e}")
     admin_update_flow.pop(admin_id, None)

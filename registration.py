@@ -18,9 +18,14 @@ def start(message):
                 f"👋 Welcome back {user.get('name', '')}! You are registered as: {user['role']} from {user.get('block', 'Unknown Block')}"
             )
         else:
+            user_cca = user.get('cca', '')
+            if user_cca and user_cca.lower() != "no cca":
+                role_display = f"{user['role']} ({user_cca})"
+            else:
+                role_display = user['role']
             bot.send_message(
                 message.from_user.id,
-                f"👋 Welcome back {user.get('name', '')}! You are registered as: {user['role']} of {user['cca']} from {user.get('block', 'Unknown Block')}"
+                f"👋 Welcome back {user.get('name', '')}! You are registered as: {role_display} from {user.get('block', 'Unknown Block')}"
             )
         send_main_menu(message.from_user.id)
 
