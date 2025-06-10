@@ -1103,3 +1103,4 @@ Traceback (most recent call last):
     user_block = user.get("block", "").strip().lower()
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'NoneType' object has no attribute 'strip'
+2025-06-10 21:54:33,529 - config - CRITICAL - Bot is starting polling...
