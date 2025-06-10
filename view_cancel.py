@@ -226,16 +226,29 @@ def view_command(message):
     current_time = dt.now(TZ)
     
     user_role = user["role"].strip().lower()
+    user_cca = user.get("cca", "").strip()
+    
     if user_role == "jcrc":
-        # JCRC can view Dining Hall, Reading Room, MPSH bookings + their own bookings
-        venue_ids = get_venue_ids_for(["Dining Hall", "Reading Room", "MPSH"])
-        
-        # Get confirmed bookings for JCRC venues
-        jcrc_venue_bookings = supabase.table("bookings").select("*") \
-            .in_("venue_id", venue_ids) \
-            .eq("status", "confirmed") \
-            .order("booking_date", desc=False) \
-            .execute()
+        if user_cca == "Welfare D":
+            # JCRC Welfare D can view Dining Hall, Reading Room bookings + their own bookings
+            venue_ids = get_venue_ids_for(["Dining Hall", "Reading Room"])
+            
+            # Get confirmed bookings for JCRC Welfare D venues
+            jcrc_venue_bookings = supabase.table("bookings").select("*") \
+                .in_("venue_id", venue_ids) \
+                .eq("status", "confirmed") \
+                .order("booking_date", desc=False) \
+                .execute()
+        else:
+            # Other JCRC members can view MPSH bookings + their own bookings
+            venue_ids = get_venue_ids_for(["MPSH"])
+            
+            # Get confirmed bookings for MPSH
+            jcrc_venue_bookings = supabase.table("bookings").select("*") \
+                .in_("venue_id", venue_ids) \
+                .eq("status", "confirmed") \
+                .order("booking_date", desc=False) \
+                .execute()
         
         # Get all their personal bookings (exclude rejected and cancelled)
         personal_bookings_data = supabase.table("bookings").select("*") \
@@ -258,7 +271,6 @@ def view_command(message):
         # Sort by booking_date (time start ascending)
         bookings = sorted(bookings, key=lambda x: x["booking_date"])
     elif user_role == "block head":
-        # Block Head can view their block's lounge bookings + their own bookings
         user_block = user.get("block", "").strip()
         lounge_name = f"{user_block} Lounge"
         lounge_venue_ids = get_venue_ids_for([lounge_name])

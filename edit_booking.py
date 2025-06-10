@@ -11,19 +11,31 @@ edit_booking_message_ids = {}
 edit_flow_data = {}
 
 def can_user_edit_venue(user, venue_name):
-    """Check if user can edit bookings for a specific venue"""
+    """Check if user can edit bookings for a specific venue (only venues they have instant booking for)"""
     user_role = user["role"].strip().lower()
     venue_name = venue_name.strip().lower()
+    user_cca = user.get("cca", "").strip()
     
+    # JCRC can edit Reading Room and Dining Hall (they have instant booking)
     if user_role == "jcrc" and venue_name in ["reading room", "dining hall"]:
         return True
-    elif user_role in ["captain", "chairman"] and venue_name in ["mpsh", "band room"]:
-        return True
+    # Captains (all CCAs) and Chairman of Dance can edit MPSH (they have instant booking)
+    elif venue_name == "mpsh":
+        if user_role == "captain":
+            return True
+        elif user_role == "chairman" and user_cca == "Dance":
+            return True
+    # Only Chairman of Rockers or Inspire can edit Band Room (they have instant booking)
+    elif venue_name == "band room":
+        if user_role == "chairman" and user_cca in ["Rockers", "Inspire"]:
+            return True
+    # Block Head can edit their own block's lounge (they have instant booking for their own block)
     elif user_role == "block head":
         user_block = user.get("block", "").strip().lower()
         if "blk lounge" in venue_name:
             venue_block = venue_name.replace(" lounge", "")
             return user_block == venue_block
+    
     return False
 
 def is_booking_ongoing_or_future(booking_date_str, duration_str, current_time):
@@ -404,16 +416,13 @@ def handle_edit_duration(message):
             cleanup_edit_session(user_id)
             return
         
-        # Update the booking
-        new_start_str = new_start_dt.replace(tzinfo=None).strftime("%Y-%m-%d %H:%M:%S")
-        
         # Remove old calendar event if exists
         if booking.get("calendar_event_id"):
             remove_event_from_calendar(booking["calendar_event_id"])
         
         # Prepare update data
         update_data = {
-            "booking_date": new_start_str,
+            "booking_date": new_start_dt.replace(tzinfo=None).strftime("%Y-%m-%d %H:%M:%S"),
             "duration": duration_str,
             "calendar_event_id": None  # Will be set below
         }

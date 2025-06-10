@@ -36,13 +36,16 @@ def notify_approval(booking):
         except Exception as e:
             print(f"Failed to notify group {chat_id}: {e}")
 
-def notify_jcrc_of_new_request(booking):
-    # Use case-insensitive query for JCRC role
-    jcrc_result = supabase.table("users").select("*").ilike("role", "JCRC").execute()
-    jcrc_users = jcrc_result.data if jcrc_result.data else []
+def notify_jcrc_welfare_d_of_new_request(booking):
+    # Find JCRC users with Welfare D CCA only
+    jcrc_welfare_d_result = supabase.table("users").select("*") \
+        .ilike("role", "JCRC") \
+        .eq("cca", "Welfare D") \
+        .execute()
+    jcrc_welfare_d_users = jcrc_welfare_d_result.data if jcrc_welfare_d_result.data else []
     
-    if not jcrc_users:
-        print("No JCRC users found in database")
+    if not jcrc_welfare_d_users:
+        print("No JCRC Welfare D users found in database")
         return
     
     booking_id = booking["booking_id"]
@@ -68,13 +71,13 @@ def notify_jcrc_of_new_request(booking):
         f"📝 Reason: {booking.get('reason', '')}\n"
         "----------------------"
     )
-    for jcrc_user in jcrc_users:
+    for jcrc_user in jcrc_welfare_d_users:
         jcrc_user_id = jcrc_user["user_id"]
         try:
             bot.send_message(jcrc_user_id, detail_msg)
-            print(f"Notification sent to JCRC user {jcrc_user_id}")
+            print(f"Notification sent to JCRC (Welfare D) user {jcrc_user_id}")
         except Exception as e:
-            print(f"Failed to notify JCRC user {jcrc_user_id}: {e}")
+            print(f"Failed to notify JCRC (Welfare D) user {jcrc_user_id}: {e}")
 
 def notify_block_head_of_new_request(booking, venue):
     # Extract block from venue name (e.g., "A Blk Lounge" -> "A Blk")

@@ -46,7 +46,7 @@ CCAS = [
     "No CCA", "Steppers", "Dance", "Badminton", "Volleyball",
     "Table Tennis", "Floorball", "Takraw", "Rockers", "Inspire",
     "A Blk", "B Blk", "C Blk", "D Blk", "E Blk",
-    "Welfare D", "Sports D", "Culture D"
+    "Welfare D", "Sports D", "Culture D", "President", "Vice-President",
 ]
 VENUE_COLORS = {
     "Reading Room": "2",

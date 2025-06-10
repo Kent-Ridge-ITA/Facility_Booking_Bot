@@ -28,6 +28,7 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
         else:
             status = "pending approval"
     elif venue_name in ["reading room", "dining hall"]:
+        # All JCRC can instant book, but only Welfare D can approve/reject
         status = "confirmed" if user_role.strip().lower() == "jcrc" else "pending approval"
     elif venue_name in ["mpsh", "band room"]:
         status = "confirmed"
@@ -63,8 +64,8 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
     # Send notifications for pending approvals
     if status == "pending approval" and new_booking_data:
         if venue_name in ["reading room", "dining hall"]:
-            from notifications import notify_jcrc_of_new_request
-            notify_jcrc_of_new_request(new_booking_data)
+            from notifications import notify_jcrc_welfare_d_of_new_request
+            notify_jcrc_welfare_d_of_new_request(new_booking_data)
         elif "blk lounge" in venue_name:
             from notifications import notify_block_head_of_new_request
             notify_block_head_of_new_request(new_booking_data, venue)

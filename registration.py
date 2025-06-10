@@ -80,8 +80,13 @@ def send_main_menu(chat_id):
     if user and user["role"].strip().lower() == "admin":
         buttons.append(types.KeyboardButton("/admin_update"))
         buttons.append(types.KeyboardButton("/restart"))
-    if user and user["role"].strip().lower() in ["jcrc", "block head"]:
+    
+    # Show approve button for JCRC Welfare D and Block Heads only
+    user_role = user["role"].strip().lower() if user else ""
+    user_cca = user.get("cca", "").strip() if user else ""
+    if (user_role == "jcrc" and user_cca == "Welfare D") or user_role == "block head":
         buttons.append(types.KeyboardButton("/approve"))
+    
     # Add edit button for users with instant booking privileges
     if user and user["role"].strip().lower() in ["jcrc", "captain", "chairman", "block head"]:
         buttons.append(types.KeyboardButton("/edit"))
