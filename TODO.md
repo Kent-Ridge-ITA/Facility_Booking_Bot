@@ -7,3 +7,9 @@ README.md is the final checklist for the booking bot, test each feature and see 
 3. Update /help to be specific to role, show different /help depending on what they can do based on their role and CCA
 
 4. Update all listing of bookings to rank by time start ascending then if same, duration ascending
+
+5. Slots overdue still showing up in "Slots booked for this venue for the next 7 days"
+
+6. Approve option doesnt update show for welfare D
+
+7. Group Chat logic: Seperate KR everybody and Block Chats, send block lounges to block chat, rest goes to KR everybody

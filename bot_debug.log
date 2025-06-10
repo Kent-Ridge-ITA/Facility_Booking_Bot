@@ -1070,3 +1070,36 @@ Traceback (most recent call last):
 UnboundLocalError: cannot access local variable 'jcrc_venue_bookings' where it is not associated with a value
 2025-06-10 19:57:47,496 - config - CRITICAL - Bot is starting polling...
 2025-06-10 20:05:57,980 - config - CRITICAL - Bot is starting polling...
+2025-06-10 21:54:01,986 - config - CRITICAL - Bot is starting polling...
+2025-06-10 21:54:11,871 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "d:\VSCode\Projects\Facility_Booking_Bot\main.py", line 16, in <module>
+    bot.polling(none_stop=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            logger_level=logger_level, allowed_updates=allowed_updates)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\util.py", line 93, in run
+    task(*args, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\Winston\AppData\Local\Programs\Python\Python313\Lib\site-packages\telebot\__init__.py", line 9233, in _run_middlewares_and_handler
+    result = handler['function'](message)
+  File "d:\VSCode\Projects\Facility_Booking_Bot\registration.py", line 30, in start
+    send_main_menu(message.from_user.id)
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "d:\VSCode\Projects\Facility_Booking_Bot\registration.py", line 98, in send_main_menu
+    if mpsh_venue and user_can_access_venue(user, mpsh_venue):
+                      ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "d:\VSCode\Projects\Facility_Booking_Bot\db_helpers.py", line 51, in user_can_access_venue
+    user_block = user.get("block", "").strip().lower()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'strip'
