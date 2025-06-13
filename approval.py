@@ -114,9 +114,9 @@ def approve_command(message):
         return
     
     user_role = user["role"].strip().lower()
-    user_cca = user.get("cca", "").strip()
+    user_cca = user.get("cca", "").strip().lower()
     
-    if user_role == "jcrc" and user_cca == "Welfare D":
+    if user_role == "jcrc" and user_cca == "welfare d":
         # JCRC Welfare D can approve Reading Room and Dining Hall
         venue_ids = get_venue_ids_for(["Reading Room", "Dining Hall"])
     elif user_role == "block head":
@@ -125,7 +125,7 @@ def approve_command(message):
         lounge_name = f"{user_block} Lounge"
         venue_ids = get_venue_ids_for([lounge_name])
     else:
-        if user_role == "jcrc" and user_cca != "Welfare D":
+        if user_role == "jcrc" and user_cca != "welfare d":
             bot.send_message(user["user_id"], "You do not have permission to approve bookings. Only JCRC (Welfare D) can approve Reading Room and Dining Hall bookings. Press /start to restart.")
         else:
             bot.send_message(user["user_id"], "You do not have permission to approve bookings. Press /start to restart.")
@@ -261,10 +261,10 @@ def handle_approval_action(call):
         return
     
     user_role = user["role"].strip().lower()
-    user_cca = user.get("cca", "").strip()
+    user_cca = user.get("cca", "").strip().lower()
     
     # Check permission based on role and CCA
-    if not ((user_role == "jcrc" and user_cca == "Welfare D") or user_role == "block head"):
+    if not ((user_role == "jcrc" and user_cca == "welfare d") or user_role == "block head"):
         bot.answer_callback_query(call.id, "You do not have permission to approve bookings.")
         return
     
@@ -322,7 +322,7 @@ def handle_approval_action(call):
     
     # Check permission based on user role and venue
     has_permission = False
-    if user_role == "jcrc" and user_cca == "Welfare D" and venue_name in ["reading room", "dining hall"]:
+    if user_role == "jcrc" and user_cca == "welfare d" and venue_name in ["reading room", "dining hall"]:
         has_permission = True
     elif user_role == "block head":
         user_block = user.get("block", "").strip()
@@ -341,7 +341,7 @@ def handle_approval_action(call):
     
     if action == "approve":
         # Get all pending bookings for overlap detection
-        if user_role == "jcrc" and user_cca == "Welfare D":
+        if user_role == "jcrc" and user_cca == "welfare d":
             venue_ids = get_venue_ids_for(["Reading Room", "Dining Hall"])
         else:  # block head
             user_block = user.get("block", "").strip()

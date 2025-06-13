@@ -14,13 +14,13 @@ def mass_book_command(message):
         return
     
     user_role = user["role"].strip().lower()
-    user_cca = user.get("cca", "").strip()
+    user_cca = user.get("cca", "").strip().lower()
     
     # Check if user has permission (Captain, Chairman, or JCRC with Sports D/Culture D)
     has_permission = False
     if user_role in ["captain", "chairman"]:
         has_permission = True
-    elif user_role == "jcrc" and user_cca in ["Sports D", "Culture D"]:
+    elif user_role == "jcrc" and user_cca in ["sports d", "culture d"]:
         has_permission = True
     
     if not has_permission:
@@ -83,12 +83,12 @@ def handle_mass_booking_input(message):
     
     # Check permission again
     user_role = user["role"].strip().lower()
-    user_cca = user.get("cca", "").strip()
+    user_cca = user.get("cca", "").strip().lower()
     
     has_permission = False
     if user_role in ["captain", "chairman"]:
         has_permission = True
-    elif user_role == "jcrc" and user_cca in ["Sports D", "Culture D"]:
+    elif user_role == "jcrc" and user_cca in ["sports d", "culture d"]:
         has_permission = True
     
     if not has_permission:

@@ -226,10 +226,10 @@ def view_command(message):
     current_time = dt.now(TZ)
     
     user_role = user["role"].strip().lower()
-    user_cca = user.get("cca", "").strip()
+    user_cca = user.get("cca", "").strip().lower()
     
     if user_role == "jcrc":
-        if user_cca == "Welfare D":
+        if user_cca == "welfare d":
             # JCRC Welfare D can view ALL Dining Hall, Reading Room bookings + their own bookings
             venue_ids = get_venue_ids_for(["Dining Hall", "Reading Room"])
             
@@ -278,7 +278,7 @@ def view_command(message):
         # Sort by booking_date (time start ascending)
         bookings = sorted(bookings, key=lambda x: x["booking_date"])
     elif user_role == "block head":
-        user_block = user.get("block", "").strip()
+        user_block = user.get("block", "").strip().lower()
         lounge_name = f"{user_block} Lounge"
         lounge_venue_ids = get_venue_ids_for([lounge_name])
         

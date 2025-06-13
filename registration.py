@@ -83,7 +83,7 @@ def send_main_menu(chat_id):
     
     # Show approve button for JCRC Welfare D and Block Heads only
     user_role = user["role"].strip().lower() if user else ""
-    user_cca = user.get("cca", "").strip() if user else ""
+    user_cca = user.get("cca", "").strip().lower() if user else ""
     if (user_role == "jcrc" and user_cca == "welfare d") or user_role == "block head":
         buttons.append(types.KeyboardButton("/approve"))
     
