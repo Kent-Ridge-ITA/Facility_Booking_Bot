@@ -13,3 +13,5 @@ README.md is the final checklist for the booking bot, test each feature and see 
 6. Approve option doesnt update show for welfare D
 
 7. Group Chat logic: Seperate KR everybody and Block Chats, send block lounges to block chat, rest goes to KR everybody
+
+8. For ALL MPSH cancellations, notify the rest of the captains/dance chair that slot has been cancelled, so they can book if they want to
