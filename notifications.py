@@ -25,11 +25,18 @@ def notify_approval(booking):
         f"📝 Reason: {booking.get('reason','')}\n"
         "----------------------"
     )
+    gc_message = (
+        f"🏢 Venue: {venue_name}\n"
+        f"👤 Name: {user_name}\n"
+        f"📅 Start: {start_str}\n"
+        f"⏰ End: {end_str}\n"
+        "----------------------"
+    )
     try:
         bot.send_message(user_id, f"🎉 Your booking has been approved!\n\n{detail_message}")
     except Exception as e:
         print(f"Failed to message user {user_id}: {e}")
-    broadcast_text = f"📢 Booking Approved!\n\n{detail_message}"
+    broadcast_text = f"📢 New Booking Alert!\n\n{gc_message}"
     for chat_id in GROUP_CHAT_IDS:
         try:
             bot.send_message(chat_id, broadcast_text)
