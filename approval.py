@@ -2,7 +2,7 @@ from datetime import datetime as dt
 from telebot import types
 from config import bot, supabase
 from db_helpers import get_user_info, get_all_venues, get_all_users, parse_duration
-from notifications import notify_approval
+from notifications import notify_approval, notify_gc
 
 # Add a global dictionary to track active approval sessions
 active_approval_sessions = {}
@@ -488,6 +488,8 @@ def handle_approval_action(call):
             
             # Send notification
             notify_approval(updated_booking)
+            notify_gc(updated_booking)
+            
         
         # Prepare response message
         response_msg = f"✅ Booking {booking_id} has been approved."

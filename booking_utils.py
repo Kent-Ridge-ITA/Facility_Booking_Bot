@@ -68,8 +68,14 @@ def create_booking(user_id, venue, booking_start, duration_text, user_role, reas
             notify_jcrc_welfare_d_of_new_request(new_booking_data)
         elif "blk lounge" in venue_name:
             from notifications import notify_block_head_of_new_request
-            notify_block_head_of_new_request(new_booking_data, venue)
+            notify_block_head_of_new_request(new_booking_data)
     
+    # Send GC notifications for instantly confirmed venues
+    if status == "confirmed" and new_booking_data:
+        if venue_name in ["reading room", "dining hall", "a blk lounge", "b blk lounge", "c blk lounge", "d blk lounge", "e blk lounge"]:
+            from notifications import notify_gc
+            notify_gc(new_booking_data)
+
     return True
 
 def check_conflict(venue, new_booking_start, duration_text, user_id, booking_type="full"):

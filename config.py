@@ -63,6 +63,3 @@ VENUE_COLORS = {
 # Global dictionaries to keep track of ongoing flows
 user_booking_flow = {}
 admin_update_flow = {}
-
-# List of group chat IDs (if any)
-GROUP_CHAT_IDS = [-4947260639]
