@@ -32,8 +32,10 @@ def cancel_command(message):
     from config import TZ
     current_time = dt.now(TZ)
     
-    is_admin = (user["role"].strip().lower() == "admin")
-    if is_admin:
+    user_role = user["role"].strip().lower()
+    user_cca = user["cca"].strip().lower() if user.get("cca") else None
+
+    if user_role == "admin":
         # Admin can cancel all ongoing and future bookings (exclude rejected and cancelled)
         admin_bookings_data = supabase.table("bookings").select("*") \
             .not_.in_("status", ["cancelled", "rejected"]) \
@@ -42,6 +44,91 @@ def cancel_command(message):
         all_bookings = admin_bookings_data.data if admin_bookings_data.data else []
         # Filter to only ongoing and future bookings
         bookings = [b for b in all_bookings if is_booking_ongoing_or_future(b["booking_date"], b["duration"], current_time)]
+    elif user_role == "jcrc":
+        if user_cca == "welfare d":
+            # JCRC Welfare D can view ALL Dining Hall, Reading Room bookings + their own bookings
+            venue_ids = get_venue_ids_for(["Dining Hall", "Reading Room"])
+            
+            # Get ALL confirmed bookings for JCRC Welfare D venues
+            jcrc_bookings_data = supabase.table("bookings").select("*") \
+                .in_("venue_id", venue_ids) \
+                .eq("status", "confirmed") \
+                .order("booking_date", desc=False) \
+                .execute()
+            
+        elif user_cca in ["sports d", "culture d"]:
+            # JCRC Sports D and Culture D can view ALL MPSH bookings + their own bookings
+            venue_ids = get_venue_ids_for(["MPSH"])
+            
+            # Get ALL bookings for MPSH
+            jcrc_bookings_data = supabase.table("bookings").select("*") \
+                .in_("venue_id", venue_ids) \
+                .eq("status", "confirmed") \
+                .order("booking_date", desc=False) \
+                .execute()
+       
+        else:
+            # Other JCRC members don't have special venue viewing privileges
+            jcrc_bookings_data = None
+        
+        if jcrc_bookings_data:
+            all_bookings = jcrc_bookings_data.data if jcrc_bookings_data.data else []
+        else:
+            all_bookings = []
+        
+        # Get all their personal bookings (exclude rejected and cancelled)
+        personal_bookings_data = supabase.table("bookings").select("*") \
+            .eq("user_id", user["user_id"]) \
+            .not_.in_("status", ["cancelled", "rejected"]) \
+            .order("booking_date", desc=False) \
+            .execute()
+        personal_bookings = personal_bookings_data.data if personal_bookings_data.data else []
+        
+        # Combine and filter for ongoing/future bookings
+        all_bookings = (all_bookings) + personal_bookings
+        booking_ids = set()
+        combined_bookings = []
+        for b in all_bookings:
+            if b["booking_id"] not in booking_ids:
+                combined_bookings.append(b)
+                booking_ids.add(b["booking_id"])
+        # Filter to only ongoing and future bookings
+        bookings = [b for b in combined_bookings if is_booking_ongoing_or_future(b["booking_date"], b["duration"], current_time)]
+        # Sort by booking_date (time start ascending)
+        bookings = sorted(bookings, key=lambda x: x["booking_date"])
+
+    elif user_role == "block head":
+        user_block = user.get("block", "").strip().lower()
+        lounge_name = f"{user_block} Lounge"
+        lounge_venue_ids = get_venue_ids_for([lounge_name])
+        
+        # Get confirmed bookings for their block's lounge
+        lounge_bookings = supabase.table("bookings").select("*") \
+            .in_("venue_id", lounge_venue_ids) \
+            .eq("status", "confirmed") \
+            .order("booking_date", desc=False) \
+            .execute()
+        
+        # Get all their personal bookings (exclude rejected and cancelled)
+        personal_bookings_data = supabase.table("bookings").select("*") \
+            .eq("user_id", user["user_id"]) \
+            .not_.in_("status", ["cancelled", "rejected"]) \
+            .order("booking_date", desc=False) \
+            .execute()
+        personal_bookings = personal_bookings_data.data if personal_bookings_data.data else []
+        
+        # Combine and filter for ongoing/future bookings
+        all_bookings = (lounge_bookings.data if lounge_bookings.data else []) + personal_bookings
+        booking_ids = set()
+        combined_bookings = []
+        for b in all_bookings:
+            if b["booking_id"] not in booking_ids:
+                combined_bookings.append(b)
+                booking_ids.add(b["booking_id"])
+        # Filter to only ongoing and future bookings
+        bookings = [b for b in combined_bookings if is_booking_ongoing_or_future(b["booking_date"], b["duration"], current_time)]
+        # Sort by booking_date (time start ascending)
+        bookings = sorted(bookings, key=lambda x: x["booking_date"])
     else:
         # Regular user can cancel only their ongoing and future bookings (exclude rejected and cancelled)
         user_bookings_data = supabase.table("bookings").select("*") \
@@ -190,8 +277,8 @@ def handle_cancel_action(call):
         return
     
     # Check permission - regular users can only cancel their own bookings
-    is_admin = user["role"].strip().lower() == "admin"
-    if not is_admin and booking["user_id"] != user["user_id"]:
+    user_role = user["role"].strip().lower()
+    if user_role not in ["admin", "jcrc", "block head"] and booking["user_id"] != user["user_id"]:
         bot.answer_callback_query(call.id, "You can only cancel your own bookings.")
         return
     
@@ -199,8 +286,10 @@ def handle_cancel_action(call):
     if user["user_id"] in cancel_booking_message_ids and call.message.message_id in cancel_booking_message_ids[user["user_id"]]:
         cancel_booking_message_ids[user["user_id"]].remove(call.message.message_id)
     
+    is_allowed = user_role in ["admin", "jcrc", "block head"]
+
     # Cancel the booking
-    if cancel_booking(booking_id, user["user_id"], is_admin=is_admin):
+    if cancel_booking(booking_id, user["user_id"], is_allowed=is_allowed):
         bot.answer_callback_query(call.id, "Booking cancelled!")
         try:
             bot.edit_message_text(f"✅ Booking {booking_id} has been cancelled.", 
@@ -239,7 +328,7 @@ def view_command(message):
                 .eq("status", "confirmed") \
                 .order("booking_date", desc=False) \
                 .execute()
-        elif user_cca in ["Sports D", "Culture D"]:
+        elif user_cca in ["sports d", "culture d"]:
             # JCRC Sports D and Culture D can view ALL MPSH bookings + their own bookings
             venue_ids = get_venue_ids_for(["MPSH"])
             

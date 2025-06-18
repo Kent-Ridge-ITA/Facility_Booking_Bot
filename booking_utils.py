@@ -168,9 +168,9 @@ def check_start_conflict(venue, proposed_start, booking_type="full"):
                 return True
     return False
 
-def cancel_booking(booking_id, user_id, is_admin=False):
+def cancel_booking(booking_id, user_id, is_allowed=False):
     query = supabase.table("bookings").select("*").eq("booking_id", booking_id)
-    if not is_admin:
+    if not is_allowed:
         query = query.eq("user_id", user_id)
     result = query.execute()
     if not result.data:

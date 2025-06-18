@@ -1112,3 +1112,60 @@ AttributeError: 'NoneType' object has no attribute 'strip'
 2025-06-16 10:37:04,736 - config - CRITICAL - Bot is starting polling...
 2025-06-16 11:29:56,294 - config - CRITICAL - Bot is starting polling...
 2025-06-18 00:28:13,552 - config - CRITICAL - Bot is starting polling...
+2025-06-18 23:46:07,776 - config - CRITICAL - Bot is starting polling...
+2025-06-18 23:46:28,915 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/main.py", line 16, in <module>
+    bot.polling(none_stop=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            logger_level=logger_level, allowed_updates=allowed_updates)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 9233, in _run_middlewares_and_handler
+    result = handler['function'](message)
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/view_cancel.py", line 68, in cancel_command
+    all_bookings = jcrc_bookings_data.data if jcrc_bookings_data.data else []
+                                              ^^^^^^^^^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'jcrc_bookings_data' where it is not associated with a value
+2025-06-18 23:56:56,247 - config - CRITICAL - Bot is starting polling...
+2025-06-18 23:57:06,176 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/main.py", line 16, in <module>
+    bot.polling(none_stop=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            logger_level=logger_level, allowed_updates=allowed_updates)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 9233, in _run_middlewares_and_handler
+    result = handler['function'](message)
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/view_cancel.py", line 73, in cancel_command
+    all_bookings = jcrc_bookings_data.data if jcrc_bookings_data.data else []
+                                              ^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'NoneType' object has no attribute 'data'
+2025-06-18 23:59:30,778 - config - CRITICAL - Bot is starting polling...
+2025-06-19 00:15:34,695 - config - CRITICAL - Bot is starting polling...
+2025-06-19 00:19:21,425 - config - CRITICAL - Bot is starting polling...
