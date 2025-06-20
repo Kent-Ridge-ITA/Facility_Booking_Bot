@@ -51,13 +51,15 @@ def handle_venue_selection(message):
 
 def show_existing_bookings_and_continue(user_id, chosen_venue):
     # Display confirmed bookings for the next 7 days
-    start_of_week = dt.now(TZ).replace(hour=0, minute=0, second=0, microsecond=0)
-    end_of_week = start_of_week + timedelta(days=7)
+    start_of_week = dt.now(TZ)
+    # 7 days from today, same weekday next week
+    end_day = start_of_week + timedelta(days=7)
+    end_of_week = end_day.replace(hour=23, minute=59, second=59, microsecond=0)
     response = supabase.table("bookings").select("*") \
         .eq("venue_id", chosen_venue["venue_id"]) \
         .eq("status", "confirmed") \
-        .gte("booking_date", start_of_week.strftime("%Y-%m-%d 00:00:00")) \
-        .lte("booking_date", end_of_week.strftime("%Y-%m-%d 23:59:59")) \
+        .gte("booking_date", start_of_week.strftime("%Y-%m-%d %H:%M:%S")) \
+        .lte("booking_date", end_of_week.strftime("%Y-%m-%d %H:%M:%S")) \
         .order("booking_date", desc=False) \
         .execute()
     bookings = response.data if response.data else []

@@ -1169,3 +1169,34 @@ AttributeError: 'NoneType' object has no attribute 'data'
 2025-06-18 23:59:30,778 - config - CRITICAL - Bot is starting polling...
 2025-06-19 00:15:34,695 - config - CRITICAL - Bot is starting polling...
 2025-06-19 00:19:21,425 - config - CRITICAL - Bot is starting polling...
+2025-06-21 00:40:56,917 - config - CRITICAL - Bot is starting polling...
+2025-06-21 00:41:22,532 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/main.py", line 16, in <module>
+    bot.polling(none_stop=True)
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+    ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                            logger_level=logger_level, allowed_updates=allowed_updates)
+                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/__init__.py", line 1235, in __threaded_polling
+    self.worker_pool.raise_exceptions()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/util.py", line 150, in raise_exceptions
+    raise self.exception_info
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/.venv/lib/python3.13/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+    ~~~~^^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/booking_flow.py", line 50, in handle_venue_selection
+    show_existing_bookings_and_continue(user_id, chosen_venue)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jared/Documents/KR_Facility_Booking_Bot/Facility_Booking_Bot/booking_flow.py", line 56, in show_existing_bookings_and_continue
+    end_day = now + timedelta(days=7)
+              ^^^
+NameError: name 'now' is not defined. Did you mean: 'pow'?
+2025-06-21 00:41:46,312 - config - CRITICAL - Bot is starting polling...
+2025-06-21 01:16:42,669 - config - CRITICAL - Bot is starting polling...
+2025-06-21 01:18:32,999 - config - CRITICAL - Bot is starting polling...

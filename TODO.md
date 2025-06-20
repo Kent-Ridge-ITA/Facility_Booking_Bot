@@ -6,8 +6,6 @@ README.md is the final checklist for the booking bot, test each feature and see 
 
 3. Update all listing of bookings to rank by time start ascending then if same, duration ascending
 
-4. Slots overdue still showing up in "Slots booked for this venue for the next 7 days"
+4. For ALL MPSH cancellations, notify the rest of the captains/dance chair that slot has been cancelled, so they can book if they want to
 
-5. For ALL MPSH cancellations, notify the rest of the captains/dance chair that slot has been cancelled, so they can book if they want to
-
-6. Able to be Chairman of Sport and Captain of Dance and still see MPSH logic
+5. Able to be Chairman of Sport and Captain of Dance and still see MPSH logic
