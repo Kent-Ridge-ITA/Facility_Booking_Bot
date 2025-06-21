@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 from telebot import types
-from config import bot, supabase
+from config import bot, supabase, TZ
 from db_helpers import get_user_info, get_all_venues, get_all_users, parse_duration, get_user_bookings, get_venue_ids_for
 from booking_utils import cancel_booking
 
@@ -13,7 +13,6 @@ def is_booking_ongoing_or_future(booking_date_str, duration_str, current_time):
     booking_start = dt.fromisoformat(booking_date_str)
     # Make booking_start timezone-aware if needed
     if booking_start.tzinfo is None:
-        from config import TZ
         booking_start = TZ.localize(booking_start)
     
     duration = parse_duration(duration_str)
@@ -29,7 +28,6 @@ def cancel_command(message):
         return
     
     # Get current time for filtering past bookings
-    from config import TZ
     current_time = dt.now(TZ)
     
     user_role = user["role"].strip().lower()
@@ -145,7 +143,7 @@ def cancel_command(message):
         return
     
     # Create new cancel session - use integer timestamp to avoid precision issues
-    session_id = str(int(dt.now().timestamp()))
+    session_id = str(int(dt.now(TZ).timestamp()))
     active_cancel_sessions[user["user_id"]] = session_id
     # Initialize message IDs tracking for this session
     cancel_booking_message_ids[user["user_id"]] = []
@@ -165,7 +163,6 @@ def cancel_command(message):
         booking_start = dt.fromisoformat(b["booking_date"])
         # Make booking_start timezone-aware if needed
         if booking_start.tzinfo is None:
-            from config import TZ
             booking_start = TZ.localize(booking_start)
         
         dur = parse_duration(b["duration"])
@@ -311,7 +308,6 @@ def view_command(message):
         return
     
     # Get current time for filtering past bookings
-    from config import TZ
     current_time = dt.now(TZ)
     
     user_role = user["role"].strip().lower()
@@ -432,7 +428,6 @@ def view_command(message):
     for b in bookings:
         booking_start = dt.fromisoformat(b["booking_date"])
         if booking_start.tzinfo is None:
-            from config import TZ
             booking_start = TZ.localize(booking_start)
         
         dur = parse_duration(b["duration"])

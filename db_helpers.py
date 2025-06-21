@@ -1,6 +1,7 @@
 from datetime import timedelta
 import json
-from config import supabase
+from config import supabase, TZ
+from datetime import datetime as dt
 
 def parse_duration(duration_text):
     parts = duration_text.split(":")
@@ -68,3 +69,23 @@ def user_can_access_venue(user, venue):
     if allowed_roles and not allowed_ccas:
         return user_role in allowed_roles
     return False
+
+def within_booking_limit(user_id, venues, max_bookings= 1):
+    """
+    Checks if the user has reached the maximum number of active bookings allowed for the specific venues(veneus is array of venue_id).
+    Returns True if they can book, False otherwise.
+    """
+    bookings = get_user_bookings(user_id)
+    confirmed_pending_bookings = [b for b in bookings if (b["status"] == "confirmed" or b["status"] == "pending approval") and b["venue_id"] in venues]
+    
+    def is_active_booking(booking_date, duration):
+        hours, minutes = map(int, duration.split(":"))
+        delta = timedelta(hours=hours, minutes=minutes)
+        booking_start_time = dt.strptime(booking_date, "%Y-%m-%dT%H:%M:%S")
+        booking_end_time = booking_start_time + delta
+        booking_end_time = TZ.localize(booking_end_time)
+
+        return dt.now(TZ) <= booking_end_time
+    
+    active_bookings = [b for b in confirmed_pending_bookings if is_active_booking(b["booking_date"], b["duration"])]
+    return len(active_bookings) < max_bookings

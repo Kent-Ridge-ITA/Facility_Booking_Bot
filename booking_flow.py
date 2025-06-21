@@ -1,7 +1,7 @@
 from datetime import datetime as dt, timedelta
 from telebot import types
 from config import bot, user_booking_flow, TZ, supabase
-from db_helpers import parse_duration, get_all_venues, user_can_access_venue, get_user_info
+from db_helpers import parse_duration, get_all_venues, user_can_access_venue, get_user_info, within_booking_limit
 from booking_utils import check_start_conflict, check_conflict, create_booking
 
 @bot.message_handler(commands=['book'])
@@ -38,6 +38,15 @@ def handle_venue_selection(message):
     flow_data = user_booking_flow[user_id]
     venue_name = message.text.strip().lower()
     chosen_venue = next((v for v in flow_data["accessible_venues"] if v["name"].strip().lower() == venue_name), None)
+    if chosen_venue['name'].strip().lower() in ["dining hall", "reading room"]:
+        # Special case for Dining Hall and Reading Room
+        if flow_data["user"]["role"].strip().lower() != "jcrc" and not within_booking_limit(user_id, [3, 4]):
+            bot.send_message(user_id, "🚫 You have reached your booking limit for Dining Hall or Reading Room. Please try /start again.")
+            return
+    if chosen_venue['name'].strip().lower() in ["a blk lounge", "b blk lounge", "c blk lounge", "d blk lounge", "e blk lounge"]:
+        if flow_data["user"]["role"].strip().lower() != "jcrc" and not within_booking_limit(user_id, [5, 6, 7, 8, 9]):
+            bot.send_message(user_id, "🚫 You have reached your booking limit for the Block Lounge. Please try /start again.")
+            return
     if not chosen_venue:
         bot.send_message(user_id, "Invalid venue selection. Please try /start again.")
         user_booking_flow.pop(user_id, None)

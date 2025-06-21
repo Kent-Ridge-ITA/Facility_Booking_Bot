@@ -1,6 +1,6 @@
 from datetime import datetime as dt
 from telebot import types
-from config import bot, supabase
+from config import bot, supabase, TZ
 from db_helpers import get_user_info, get_all_venues, get_all_users, parse_duration
 from notifications import notify_approval, notify_gc
 
@@ -132,7 +132,6 @@ def approve_command(message):
         return
     
     # Get current time to filter out past bookings
-    from config import TZ
     current_time = dt.now(TZ)
     
     response = supabase.table("bookings").select("*") \
@@ -152,7 +151,7 @@ def approve_command(message):
         return
     
     # Create new approval session - use integer timestamp to avoid precision issues
-    session_id = str(int(dt.now().timestamp()))
+    session_id = str(int(dt.now(TZ).timestamp()))
     active_approval_sessions[user["user_id"]] = session_id
     # Initialize message IDs tracking for this session
     booking_message_ids[user["user_id"]] = []
@@ -348,7 +347,6 @@ def handle_approval_action(call):
             lounge_name = f"{user_block} Lounge"
             venue_ids = get_venue_ids_for([lounge_name])
         
-        from config import TZ
         current_time = dt.now(TZ)
         
         pending_response = supabase.table("bookings").select("*") \

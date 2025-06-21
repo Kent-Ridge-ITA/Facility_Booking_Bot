@@ -92,7 +92,7 @@ def edit_command(message):
         return
     
     # Create new edit session
-    session_id = str(int(dt.now().timestamp()))
+    session_id = str(int(dt.now(TZ).timestamp()))
     active_edit_sessions[user["user_id"]] = session_id
     edit_booking_message_ids[user["user_id"]] = []
     
