@@ -47,6 +47,12 @@ def mass_book_command(message):
         bot.send_message(user["user_id"], f"❌ You do not have access to MPSH. Your current role is {role_display}. Please contact an administrator if you believe this is an error. Press /start to restart.")
         return
     
+    # Generate dynamic example dates
+    today = dt.now(TZ).date()
+    example_date1 = (today + timedelta(days=1)).strftime("%Y-%m-%d")
+    example_date2 = (today + timedelta(days=8)).strftime("%Y-%m-%d")
+    example_date3 = (today + timedelta(days=15)).strftime("%Y-%m-%d")
+    
     # Send example message
     example_message = (
         "🏟️ **MPSH Mass Booking**\n\n"
@@ -56,9 +62,9 @@ def mass_book_command(message):
         "`Type, Date, Start Time, Duration, Reason`\n\n"
         "📋 **Example:**\n"
         "```\n"
-        "Full, 2025-06-15, 14:00, 2:00, Training\n"
-        "Half, 2025-06-16, 10:00, 1:30, Practice\n"
-        "Full, 2025-06-17, 16:00, 3:00, Tech Run\n"
+        f"Full, {example_date1}, 18:00, 4:00, Training\n"
+        f"Half, {example_date2}, 20:00, 1:30, Practice\n"
+        f"Full, {example_date3}, 18:00, 2:00, Tech Run\n"
         "```\n\n"
         "`Click the example above to copy it.`\n\n"
         "⚠️ **Important Notes:**\n"
