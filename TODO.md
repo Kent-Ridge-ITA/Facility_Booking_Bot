@@ -1,12 +1,10 @@
 README.md is the final checklist for the booking bot, test each feature and see which is missing/bugged
 
-1. Update /help to be specific to role, show different /help depending on what they can do based on their role and CCA
+1. Update all listing of bookings to rank by time start ascending then if same, duration ascending
 
-2. Update all listing of bookings to rank by time start ascending then if same, duration ascending
+2. Able to be Chairman of Sport and Captain of Dance and still see MPSH logic (If assign properly, isn't an issue)
 
-3. Able to be Chairman of Sport and Captain of Dance and still see MPSH logic (If assign properly, isn't an issue)
-
-4. Able to crash the bot if spammed edit and then exit_edit
+3. Able to crash the bot if spammed edit and then exit_edit
 
 Traceback (most recent call last):
   File "/Users/winston/Developer/Projects/Facility-Booking-Bot/main.py", line 16, in <module>
