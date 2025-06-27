@@ -74,13 +74,28 @@ def user_can_access_venue(user, venue):
             if user_cca and user_cca in [v.strip().lower() for v in values]:
                 return True
     
-    # If no instant booking access, check if they can at least request bookings
+    # Check venue-specific role and CCA restrictions
+    allowed_roles = venue.get("allowed_roles", [])
+    allowed_ccas = venue.get("allowed_ccas", [])
+    
+    # If venue has allowed_roles restriction, check if user's role is allowed
+    if allowed_roles:
+        user_role_allowed = user_role in [role.strip().lower() for role in allowed_roles]
+        if not user_role_allowed:
+            return False
+    
+    # If venue has allowed_ccas restriction, check if user's CCA is allowed
+    if allowed_ccas:
+        user_cca_allowed = user_cca in [cca.strip().lower() for cca in allowed_ccas]
+        if not user_cca_allowed:
+            return False
+    
     # Band Room is restricted to specific chairmen only
     if venue_name == "band room":
         return (user_role == "chairman" and 
                 user_cca and user_cca in ["rockers", "inspire"])
     
-    # All other venues (Reading Room, Dining Hall, MPSH) allow booking requests
+    # If no specific restrictions or user passes all checks, allow access
     return True
 
 def has_instant_booking_access(user, venue):
