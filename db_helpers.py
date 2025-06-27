@@ -45,29 +45,86 @@ def get_user_bookings(user_id, is_admin=False):
     return result.data if result.data else []
 
 def user_can_access_venue(user, venue):
-    if user is None:
-        return False
-    user_role = user["role"].strip().lower()
-    user_cca = user.get("cca", "").strip().lower()
-    user_block = user.get("block", "").strip().lower()
-    allowed_roles = venue.get("allowed_roles") or []
-    allowed_ccas = venue.get("allowed_ccas") or []
-    allowed_blocks = venue.get("allowed_blocks") or []
-    if isinstance(allowed_roles, str):
-        allowed_roles = json.loads(allowed_roles)
-    if isinstance(allowed_ccas, str):
-        allowed_ccas = json.loads(allowed_ccas)
-    if isinstance(allowed_blocks, str):
-        allowed_blocks = json.loads(allowed_blocks)
-    allowed_roles = [r.lower() for r in allowed_roles]
-    allowed_ccas = [cca.lower() for cca in allowed_ccas]
-    allowed_blocks = [b.lower() for b in allowed_blocks]
-    if allowed_blocks and user_block in allowed_blocks:
-        return True
-    if allowed_roles and allowed_ccas:
-        return user_role in allowed_roles and user_cca in allowed_ccas
-    if allowed_roles and not allowed_ccas:
-        return user_role in allowed_roles
+    """Check if user can access a venue based on database permissions"""
+    # Get instant booking permissions from venue
+    instant_book_permissions = venue.get("instant_book", {})
+    
+    user_role = user.get("role", "").strip().lower() if user.get("role") else ""
+    user_cca = user.get("cca", "").strip().lower() if user.get("cca") else ""
+    user_block = user.get("block", "").strip().lower() if user.get("block") else ""
+    venue_name = venue["name"].strip().lower()
+    
+    # Special handling for block lounges - users can only access their own block's lounge
+    if "blk lounge" in venue_name:
+        # Extract block from venue name (e.g., "A Blk Lounge" -> "a blk")
+        venue_block = venue_name.replace(" lounge", "").strip().lower()
+        
+        # Block heads can only access their own block's lounge
+        if user_role == "block head":
+            return user_block and user_block == venue_block
+        
+        # Other users can request bookings for their own block's lounge
+        # (but will need approval unless they have instant booking access)
+        return user_block and user_block == venue_block
+    
+    # Check if user has instant booking access
+    for role, values in instant_book_permissions.items():
+        if user_role == role.strip().lower():
+            # For other roles, check CCA
+            if user_cca and user_cca in [v.strip().lower() for v in values]:
+                return True
+    
+    # If no instant booking access, check if they can at least request bookings
+    # Band Room is restricted to specific chairmen only
+    if venue_name == "band room":
+        return (user_role == "chairman" and 
+                user_cca and user_cca in ["rockers", "inspire"])
+    
+    # All other venues (Reading Room, Dining Hall, MPSH) allow booking requests
+    return True
+
+def has_instant_booking_access(user, venue):
+    """Check if user has instant booking access to a venue"""
+    instant_book_permissions = venue.get("instant_book", {})
+    
+    user_role = user.get("role", "").strip().lower() if user.get("role") else ""
+    user_cca = user.get("cca", "").strip().lower() if user.get("cca") else ""
+    user_block = user.get("block", "").strip().lower() if user.get("block") else ""
+    
+    # Check if user has instant booking access
+    for role, values in instant_book_permissions.items():
+        if user_role == role.strip().lower():
+            # For block lounges, check block instead of CCA
+            if role.strip().lower() == "block head":
+                if user_block and user_block in [v.strip().lower() for v in values]:
+                    return True
+            else:
+                # For other roles, check CCA
+                if user_cca and user_cca in [v.strip().lower() for v in values]:
+                    return True
+    
+    return False
+
+def has_bypass_limit_access(user, venue):
+    """Check if user can bypass booking limits for a venue"""
+    bypass_limit_permissions = venue.get("bypass_limit", {})
+    
+    user_role = user.get("role", "").strip().lower() if user.get("role") else ""
+    user_cca = user.get("cca", "").strip().lower() if user.get("cca") else ""
+    user_block = user.get("block", "").strip().lower() if user.get("block") else ""
+    
+    # Check if user has bypass limit access
+    for role, values in bypass_limit_permissions.items():
+        if user_role == role.strip().lower():
+            # For block lounges, check block instead of CCA
+            if role.strip().lower() == "block head":
+                if user_block and user_block in [v.strip().lower() for v in values]:
+                    return True
+            else:
+                # For other roles, check CCA
+                if user_cca and user_cca in [v.strip().lower() for v in values]:
+                    return True
+    
     return False
 
 def within_booking_limit(user_id, venues, max_bookings= 1):

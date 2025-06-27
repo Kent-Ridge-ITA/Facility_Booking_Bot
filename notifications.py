@@ -172,3 +172,134 @@ def notify_block_head_of_new_request(booking):
             print(f"Notification sent to Block Head {block_head_user_id} for {venue_block}")
         except Exception as e:
             print(f"Failed to notify Block Head {block_head_user_id}: {e}")
+
+def notify_mpsh_cancellation(cancelled_booking, cancelled_by_user_id):
+    """Notify all MPSH-eligible users about a cancelled MPSH booking"""
+    from db_helpers import get_all_users, get_all_venues, has_instant_booking_access
+    
+    # Get the MPSH venue
+    venues = get_all_venues()
+    mpsh_venue = next((v for v in venues if v["name"].strip().lower() == "mpsh"), None)
+    
+    if not mpsh_venue:
+        print("MPSH venue not found for cancellation notification")
+        return
+    
+    # Get all users who can access MPSH
+    all_users = get_all_users()
+    eligible_users = []
+    
+    for user in all_users:
+        # Skip the user who cancelled the booking
+        if user["user_id"] == cancelled_by_user_id:
+            continue
+        
+        # Skip the original booker (they get a separate notification if cancelled by someone else)
+        if user["user_id"] == cancelled_booking["user_id"]:
+            continue
+        
+        # Skip users with incomplete data
+        if not user.get("role") or not user.get("cca"):
+            continue
+            
+        # Check if user has instant booking access to MPSH
+        if has_instant_booking_access(user, mpsh_venue):
+            eligible_users.append(user)
+    
+    if not eligible_users:
+        print("No eligible users found for MPSH cancellation notification")
+        return
+    
+    # Get booking details
+    booking_start = dt.fromisoformat(cancelled_booking["booking_date"])
+    dur = parse_duration(cancelled_booking["duration"])
+    end_dt = booking_start + dur
+    start_str = booking_start.strftime("%Y-%m-%d %H:%M")
+    end_str = end_dt.strftime("%Y-%m-%d %H:%M")
+    
+    # Get booking type display
+    booking_type = cancelled_booking.get('booking_type', 'full')
+    booking_type_display = f" [{booking_type.upper()}]"
+    
+    # Get information about the original booker
+    original_booker = get_user_info(cancelled_booking["user_id"])
+    if original_booker:
+        original_booker_name = original_booker.get("name", "Unknown User")
+        original_booker_role = original_booker.get("role", "Unknown Role")
+        original_booker_cca = original_booker.get("cca", "Unknown CCA")
+        original_booker_info = f"{original_booker_name} ({original_booker_role} - {original_booker_cca})"
+    else:
+        original_booker_info = "Unknown User"
+    
+    # Create notification message
+    notification_msg = (
+        f"🏟️ MPSH Slot is now Available!\n\n"
+        f"📅 Date & Time: {start_str} - {end_str}\n"
+        f"🏢 Venue: MPSH{booking_type_display}\n"
+        f"👤 Previously booked by: {original_booker_info}\n"
+        f"📝 Reason: {cancelled_booking.get('reason', 'No reason provided')}\n\n"
+        f"💡 This slot is now available for booking!\n"
+        f"Use /book to make a reservation."
+    )
+    
+    # Send notification to all eligible users
+    successful_notifications = 0
+    for user in eligible_users:
+        try:
+            bot.send_message(user["user_id"], notification_msg)
+            successful_notifications += 1
+        except Exception as e:
+            print(f"Failed to notify user {user['user_id']} of MPSH cancellation: {e}")
+    
+    print(f"MPSH cancellation notification sent to {successful_notifications}/{len(eligible_users)} eligible users")
+
+def notify_booking_cancelled_by_jcrc(cancelled_booking, cancelled_by_user_id):
+    """Notify the original booker that their booking was cancelled by JCRC"""
+    original_booker_id = cancelled_booking["user_id"]
+    
+    # Don't notify if the original booker is the one who cancelled
+    if original_booker_id == cancelled_by_user_id:
+        return
+    
+    # Get booking details
+    booking_start = dt.fromisoformat(cancelled_booking["booking_date"])
+    dur = parse_duration(cancelled_booking["duration"])
+    end_dt = booking_start + dur
+    start_str = booking_start.strftime("%Y-%m-%d %H:%M")
+    end_str = end_dt.strftime("%Y-%m-%d %H:%M")
+    
+    # Get booking type display
+    booking_type = cancelled_booking.get('booking_type', 'full')
+    booking_type_display = f" [{booking_type.upper()}]"
+    
+    # Get venue name
+    from db_helpers import get_all_venues
+    venues = get_all_venues()
+    venue = next((v for v in venues if v["venue_id"] == cancelled_booking["venue_id"]), None)
+    venue_name = venue["name"] if venue else "Unknown Venue"
+    
+    # Get information about who cancelled the booking
+    cancelled_by_user = get_user_info(cancelled_by_user_id)
+    if cancelled_by_user:
+        cancelled_by_name = cancelled_by_user.get("name", "Unknown User")
+        cancelled_by_role = cancelled_by_user.get("role", "Unknown Role")
+        cancelled_by_cca = cancelled_by_user.get("cca", "Unknown CCA")
+        cancelled_by_info = f"{cancelled_by_name} ({cancelled_by_role} - {cancelled_by_cca})"
+    else:
+        cancelled_by_info = "JCRC"
+    
+    # Create notification message for original booker
+    notification_msg = (
+        f"❌ Your Booking Has Been Cancelled\n\n"
+        f"📅 Date & Time: {start_str} - {end_str}\n"
+        f"🏢 Venue: {venue_name}{booking_type_display}\n"
+        f"📝 Your reason: {cancelled_booking.get('reason', 'No reason provided')}\n"
+        f"👤 Cancelled by: {cancelled_by_info}\n\n"
+        f"💡 You can make a new booking using /book if needed."
+    )
+    
+    try:
+        bot.send_message(original_booker_id, notification_msg)
+        print(f"Cancellation notification sent to original booker {original_booker_id}")
+    except Exception as e:
+        print(f"Failed to notify original booker {original_booker_id} of cancellation: {e}")

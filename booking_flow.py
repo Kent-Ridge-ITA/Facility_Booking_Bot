@@ -38,19 +38,21 @@ def handle_venue_selection(message):
     flow_data = user_booking_flow[user_id]
     venue_name = message.text.strip().lower()
     chosen_venue = next((v for v in flow_data["accessible_venues"] if v["name"].strip().lower() == venue_name), None)
-    if chosen_venue['name'].strip().lower() in ["dining hall", "reading room"]:
-        # Special case for Dining Hall and Reading Room
-        if flow_data["user"]["role"].strip().lower() != "jcrc" and not within_booking_limit(user_id, [3, 4]):
-            bot.send_message(user_id, "🚫 You have reached your booking limit for Dining Hall or Reading Room. Please try /start again.")
-            return
-    if chosen_venue['name'].strip().lower() in ["a blk lounge", "b blk lounge", "c blk lounge", "d blk lounge", "e blk lounge"]:
-        if flow_data["user"]["role"].strip().lower() != "jcrc" and not within_booking_limit(user_id, [5, 6, 7, 8, 9]):
-            bot.send_message(user_id, "🚫 You have reached your booking limit for the Block Lounge. Please try /start again.")
-            return
+    
     if not chosen_venue:
         bot.send_message(user_id, "Invalid venue selection. Please try /start again.")
         user_booking_flow.pop(user_id, None)
         return
+    
+    # Check booking limit using database permissions
+    from db_helpers import has_bypass_limit_access
+    user = flow_data["user"]
+    
+    # If user doesn't have bypass limit access, check if they're within the booking limit
+    if not has_bypass_limit_access(user, chosen_venue):
+        if not within_booking_limit(user_id, [chosen_venue["venue_id"]]):
+            bot.send_message(user_id, f"🚫 You have reached your booking limit for {chosen_venue['name']}. You can only have 1 active booking for this venue. Please try /start again.")
+            return
     
     flow_data["venue"] = chosen_venue
     flow_data["step"] = 2

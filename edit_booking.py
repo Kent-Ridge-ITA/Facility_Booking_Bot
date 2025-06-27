@@ -1,7 +1,7 @@
 from datetime import datetime as dt, timedelta
 from telebot import types
 from config import bot, supabase, TZ
-from db_helpers import get_user_info, get_all_venues, parse_duration, get_venue_ids_for
+from db_helpers import get_user_info, get_all_venues, parse_duration, get_venue_ids_for, has_instant_booking_access
 from booking_utils import check_conflict, check_start_conflict
 from calendar_helpers import add_event_to_calendar, remove_event_from_calendar
 
@@ -12,33 +12,17 @@ edit_flow_data = {}
 
 def can_user_edit_venue(user, venue_name):
     """Check if user can edit bookings for a specific venue (only venues they have instant booking for)"""
-    user_role = user["role"].strip().lower()
-    venue_name = venue_name.strip().lower()
-    user_cca = user.get("cca", "").strip().lower()
+    from db_helpers import get_all_venues, has_instant_booking_access
     
-    # JCRC can edit Reading Room and Dining Hall (they have instant booking)
-    if user_role == "jcrc" and venue_name in ["reading room", "dining hall"]:
-        return True
-    # Captains (all CCAs), Chairman of Dance, and JCRC (Sports D/Culture D) can edit MPSH (they have instant booking)
-    elif venue_name == "mpsh":
-        if user_role == "captain":
-            return True
-        elif user_role == "chairman" and user_cca == "dance":
-            return True
-        elif user_role == "jcrc" and user_cca in ["sports d", "culture d"]:
-            return True
-    # Only Chairman of Rockers or Inspire can edit Band Room (they have instant booking)
-    elif venue_name == "band room":
-        if user_role == "chairman" and user_cca in ["rockers", "inspire"]:
-            return True
-    # Block Head can edit their own block's lounge (they have instant booking for their own block)
-    elif user_role == "block head":
-        user_block = user.get("block", "").strip().lower()
-        if "blk lounge" in venue_name:
-            venue_block = venue_name.replace(" lounge", "")
-            return user_block == venue_block
+    # Get the venue object
+    venues = get_all_venues()
+    venue = next((v for v in venues if v["name"].strip().lower() == venue_name.strip().lower()), None)
     
-    return False
+    if not venue:
+        return False
+    
+    # Users can only edit venues they have instant booking access to
+    return has_instant_booking_access(user, venue)
 
 def is_booking_ongoing_or_future(booking_date_str, duration_str, current_time):
     """Check if a booking is ongoing or in the future"""
