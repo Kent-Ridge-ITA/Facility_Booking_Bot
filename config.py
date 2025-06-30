@@ -5,6 +5,7 @@ import pytz
 from dotenv import load_dotenv
 import telebot
 from supabase import create_client, Client
+from supabase.client import ClientOptions
 
 load_dotenv()
 
@@ -30,14 +31,11 @@ bot = telebot.TeleBot(TOKEN)
 TZ = pytz.timezone('Asia/Singapore')
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY, options={
-    "httpx_timeout": {  # these keys mirror HTTPX timeout options
-    "connect": 5.0,
-    "read": 10.0,
-    "write": 5.0,
-    "pool": 5.0
-  }
-})
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY, options=ClientOptions(
+        schema="public",
+        postgrest_client_timeout=10,
+        storage_client_timeout=10
+))
 
 # Global constants (roles, blocks, etc.)
 ROLES = {
