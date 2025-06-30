@@ -30,7 +30,14 @@ bot = telebot.TeleBot(TOKEN)
 TZ = pytz.timezone('Asia/Singapore')
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY, options={
+    "httpx_timeout": {  # these keys mirror HTTPX timeout options
+    "connect": 5.0,
+    "read": 10.0,
+    "write": 5.0,
+    "pool": 5.0
+  }
+})
 
 # Global constants (roles, blocks, etc.)
 ROLES = {
