@@ -1477,3 +1477,73 @@ AttributeError: 'NoneType' object has no attribute 'strip'
 2025-06-27 15:59:59,434 - config - CRITICAL - Bot is starting polling...
 2025-06-27 16:44:15,320 - config - CRITICAL - Bot is starting polling...
 2025-06-30 16:23:02,897 - config - CRITICAL - Bot is starting polling...
+2025-06-30 17:31:24,417 - config - ERROR - Unhandled exception in bot polling:
+Traceback (most recent call last):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/urllib3/connection.py", line 516, in getresponse
+    httplib_response = super().getresponse()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 1349, in getresponse
+    response.begin()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 316, in begin
+    version, status, reason = self._read_status()
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/http/client.py", line 277, in _read_status
+    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/socket.py", line 704, in readinto
+    return self._sock.recv_into(b)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/ssl.py", line 1241, in recv_into
+    return self.read(nbytes, buffer)
+  File "/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/ssl.py", line 1099, in read
+    return self._sslobj.read(len, buffer)
+socket.timeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/requests/adapters.py", line 667, in send
+    resp = conn.urlopen(
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py", line 841, in urlopen
+    retries = retries.increment(
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/urllib3/util/retry.py", line 474, in increment
+    raise reraise(type(error), error, _stacktrace)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/urllib3/util/util.py", line 39, in reraise
+    raise value
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py", line 536, in _make_request
+    self._raise_timeout(err=e, url=url, timeout_value=read_timeout)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/urllib3/connectionpool.py", line 367, in _raise_timeout
+    raise ReadTimeoutError(
+urllib3.exceptions.ReadTimeoutError: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=25)
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/main.py", line 16, in <module>
+    bot.polling(none_stop=True)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1198, in polling
+    self.__threaded_polling(non_stop=non_stop, interval=interval, timeout=timeout, long_polling_timeout=long_polling_timeout,
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1273, in __threaded_polling
+    raise e
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 1234, in __threaded_polling
+    polling_thread.raise_exceptions()
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 111, in raise_exceptions
+    raise self.exception_info
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/util.py", line 93, in run
+    task(*args, **kwargs)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 688, in __retrieve_updates
+    updates = self.get_updates(offset=(self.last_update_id + 1),
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/__init__.py", line 660, in get_updates
+    json_updates = apihelper.get_updates(
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/apihelper.py", line 332, in get_updates
+    return _make_request(token, method_url, params=payload)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/telebot/apihelper.py", line 162, in _make_request
+    result = _get_req_session().request(
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/requests/sessions.py", line 589, in request
+    resp = self.send(prep, **send_kwargs)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/requests/sessions.py", line 703, in send
+    r = adapter.send(request, **kwargs)
+  File "/Users/winston/Developer/Projects/Facility-Booking-Bot/.venv/lib/python3.9/site-packages/requests/adapters.py", line 713, in send
+    raise ReadTimeout(e, request=request)
+requests.exceptions.ReadTimeout: HTTPSConnectionPool(host='api.telegram.org', port=443): Read timed out. (read timeout=25)
+2025-06-30 19:30:35,487 - config - CRITICAL - Bot is starting polling...
